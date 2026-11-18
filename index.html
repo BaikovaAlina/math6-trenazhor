@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Математика 6 класс · Тренажёр, классные и домашние работы</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+</head>
+<body>
+
+  <div class="container">
+    <!-- Верхняя панель -->
+    <header class="site-header">
+      <div class="top-bar">
+        <div>ФГОС ООО & ФОП · УМК Виленкин, Петерсон, Мерзляк, Макарычев</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="btn-settings" onclick="openTelegramSettingsModal()">⚙️ Настройки Telegram</button>
+        </div>
+      </div>
+
+      <h1 class="main-title">📐 Математика 6 класс · Уроки 1–24</h1>
+      <p class="subtitle">Интерактивный задачник-тренажёр: теория, классные работы и автоматическая проверка ДЗ с отправкой в Telegram</p>
+    </header>
+
+    <!-- Баннер быстрого запуска тренажёра -->
+    <section class="hero-banner">
+      <div>
+        <h3>✏️ Интерактивный тренажёр 6 класса</h3>
+        <p>Мгновенная проверка ответов (зелёный/красный), подсказки к решениям, подсчёт баллов и отправка результатов учителю в один клик.</p>
+      </div>
+      <div>
+        <a href="trainer.html?variant=K-1" class="btn-hero">Открыть тренажёр ▶</a>
+      </div>
+    </section>
+
+    <!-- Панель фильтров по уровням -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterLessons('all', this)">Все уроки (1–24)</button>
+      <button class="filter-btn" onclick="filterLessons('base', this)">Базовый уровень (Виленкин, Мерзляк)</button>
+      <button class="filter-btn" onclick="filterLessons('adv', this)">Углублённый (Петерсон)</button>
+      <button class="filter-btn" onclick="filterLessons('oly', this)">Олимпиадные темы</button>
+    </div>
+
+    <!-- Список модулей и уроков -->
+    <main id="modulesContainer">
+      <!-- Модуль 1 -->
+      <section class="module-block" data-module="1">
+        <div class="module-header">
+          <div class="module-num">1</div>
+          <h2 class="module-title">Делимость натуральных чисел</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 1 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 1</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Делители и кратные. Простые и составные числа. Разложение</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-1" class="btn-lesson btn-cw">К-1 · Классная</a>
+              <a href="trainer.html?variant=D-1" class="btn-lesson btn-hw">Д-1 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(1)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 2 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 2</span>
+                <span class="badge badge-adv">Базовый + Петерсон</span>
+              </div>
+              <h4>Признаки делимости на 2, 3, 5, 9, 10, 4, 11 и 25</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-2" class="btn-lesson btn-cw">К-2 · Классная</a>
+              <a href="trainer.html?variant=D-2" class="btn-lesson btn-hw">Д-2 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(2)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 3 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 3</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>НОД и НОК. Взаимно простые числа и текстовые задачи</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-3" class="btn-lesson btn-cw">К-3 · Классная</a>
+              <a href="trainer.html?variant=D-3" class="btn-lesson btn-hw">Д-3 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(3)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 2 -->
+      <section class="module-block" data-module="2">
+        <div class="module-header">
+          <div class="module-num">2</div>
+          <h2 class="module-title">Обыкновенные дроби и вычисления</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 4 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 4</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Основное свойство дроби. Сокращение и равенство дробей</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-4" class="btn-lesson btn-cw">К-4 · Классная</a>
+              <a href="trainer.html?variant=D-4" class="btn-lesson btn-hw">Д-4 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(4)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 5 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 5</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Сравнение, сложение и вычитание дробей. Смешанные числа</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-5" class="btn-lesson btn-cw">К-5 · Классная</a>
+              <a href="trainer.html?variant=D-5" class="btn-lesson btn-hw">Д-5 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(5)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 6 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 6</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Умножение и деление обыкновенных дробей. Взаимно обратные числа</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-6" class="btn-lesson btn-cw">К-6 · Классная</a>
+              <a href="trainer.html?variant=D-6" class="btn-lesson btn-hw">Д-6 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(6)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 7 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 7</span>
+                <span class="badge badge-adv">Базовый + Петерсон</span>
+              </div>
+              <h4>Задачи на дроби: часть от целого, число по дроби, работа</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-7" class="btn-lesson btn-cw">К-7 · Классная</a>
+              <a href="trainer.html?variant=D-7" class="btn-lesson btn-hw">Д-7 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(7)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 3 -->
+      <section class="module-block" data-module="3">
+        <div class="module-header">
+          <div class="module-num">3</div>
+          <h2 class="module-title">Отношения, пропорции и проценты</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 8 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 8</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Отношения, масштаб на карте, прямая и обратная пропорциональность</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-8" class="btn-lesson btn-cw">К-8 · Классная</a>
+              <a href="trainer.html?variant=D-8" class="btn-lesson btn-hw">Д-8 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(8)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 9 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 9</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Пропорция. Основное свойство. Решение уравнений-пропорций</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-9" class="btn-lesson btn-cw">К-9 · Классная</a>
+              <a href="trainer.html?variant=D-9" class="btn-lesson btn-hw">Д-9 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(9)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 10 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 10</span>
+                <span class="badge badge-adv">Базовый + Петерсон</span>
+              </div>
+              <h4>Проценты: скидки, процентное отношение, растворы и сплавы</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-10" class="btn-lesson btn-cw">К-10 · Классная</a>
+              <a href="trainer.html?variant=D-10" class="btn-lesson btn-hw">Д-10 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(10)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 4 -->
+      <section class="module-block" data-module="4">
+        <div class="module-header">
+          <div class="module-num">4</div>
+          <h2 class="module-title">Положительные и отрицательные числа</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 11 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 11</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Координатная прямая, противоположные числа, модуль числа</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-11" class="btn-lesson btn-cw">К-11 · Классная</a>
+              <a href="trainer.html?variant=D-11" class="btn-lesson btn-hw">Д-11 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(11)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 12 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 12</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Сложение и вычитание положительных и отрицательных чисел</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-12" class="btn-lesson btn-cw">К-12 · Классная</a>
+              <a href="trainer.html?variant=D-12" class="btn-lesson btn-hw">Д-12 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(12)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 13 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 13</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Умножение и деление чисел с разными знаками. Правила знаков</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-13" class="btn-lesson btn-cw">К-13 · Классная</a>
+              <a href="trainer.html?variant=D-13" class="btn-lesson btn-hw">Д-13 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(13)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 14 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 14</span>
+                <span class="badge badge-adv">Петерсон · Углублённый</span>
+              </div>
+              <h4>Множество Q. Десятичные и бесконечные периодические дроби</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-14" class="btn-lesson btn-cw">К-14 · Классная</a>
+              <a href="trainer.html?variant=D-14" class="btn-lesson btn-hw">Д-14 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(14)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 5 -->
+      <section class="module-block" data-module="5">
+        <div class="module-header">
+          <div class="module-num">5</div>
+          <h2 class="module-title">Выражения и линейные уравнения</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 15 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 15</span>
+                <span class="badge badge-base">Базовый + Алгебра</span>
+              </div>
+              <h4>Раскрытие скобок и приведение подобных слагаемых</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-15" class="btn-lesson btn-cw">К-15 · Классная</a>
+              <a href="trainer.html?variant=D-15" class="btn-lesson btn-hw">Д-15 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(15)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 16 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 16</span>
+                <span class="badge badge-adv">Базовый + Петерсон</span>
+              </div>
+              <h4>Линейные уравнения с одной переменной. Уравнения с модулем</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-16" class="btn-lesson btn-cw">К-16 · Классная</a>
+              <a href="trainer.html?variant=D-16" class="btn-lesson btn-hw">Д-16 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(16)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 17 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 17</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Решение текстовых задач на движение и работу с помощью уравнений</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-17" class="btn-lesson btn-cw">К-17 · Классная</a>
+              <a href="trainer.html?variant=D-17" class="btn-lesson btn-hw">Д-17 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(17)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 6 -->
+      <section class="module-block" data-module="6">
+        <div class="module-header">
+          <div class="module-num">6</div>
+          <h2 class="module-title">Наглядная геометрия, окружность и тела</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 18 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 18</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Углы, смежные и вертикальные углы, биссектриса, прямые</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-18" class="btn-lesson btn-cw">К-18 · Классная</a>
+              <a href="trainer.html?variant=D-18" class="btn-lesson btn-hw">Д-18 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(18)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 19 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 19</span>
+                <span class="badge badge-base">Базовый + Геометрия</span>
+              </div>
+              <h4>Окружность и круг. Длина окружности и площадь круга (C=2πR, S=πR²)</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-19" class="btn-lesson btn-cw">К-19 · Классная</a>
+              <a href="trainer.html?variant=D-19" class="btn-lesson btn-hw">Д-19 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(19)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 20 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 20</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Прямоугольный параллелепипед и куб: объём и площадь поверхности</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-20" class="btn-lesson btn-cw">К-20 · Классная</a>
+              <a href="trainer.html?variant=D-20" class="btn-lesson btn-hw">Д-20 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(20)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 7 -->
+      <section class="module-block" data-module="7">
+        <div class="module-header">
+          <div class="module-num">7</div>
+          <h2 class="module-title">Координатная плоскость и статистика</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 21 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 21</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Прямоугольная система координат на плоскости. Построение точек</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-21" class="btn-lesson btn-cw">К-21 · Классная</a>
+              <a href="trainer.html?variant=D-21" class="btn-lesson btn-hw">Д-21 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(21)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 22 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 22</span>
+                <span class="badge badge-base">Базовый</span>
+              </div>
+              <h4>Симметрия: осевая и центральная. Столбчатые и круговые диаграммы</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-22" class="btn-lesson btn-cw">К-22 · Классная</a>
+              <a href="trainer.html?variant=D-22" class="btn-lesson btn-hw">Д-22 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(22)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 8 -->
+      <section class="module-block" data-module="8">
+        <div class="module-header">
+          <div class="module-num">8</div>
+          <h2 class="module-title">Множества, логика и олимпиадный практикум</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 23 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 23</span>
+                <span class="badge badge-adv">Петерсон · Углублённый</span>
+              </div>
+              <h4>Множества: объединение, пересечение, круги Эйлера</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-23" class="btn-lesson btn-cw">К-23 · Классная</a>
+              <a href="trainer.html?variant=D-23" class="btn-lesson btn-hw">Д-23 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(23)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 24 -->
+          <div class="lesson-card" data-level="oly">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 24</span>
+                <span class="badge badge-oly">Олимпиадный · Петерсон</span>
+              </div>
+              <h4>Олимпиадные методы: обратный ход, чётность, Дирихле, лжецы</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-24" class="btn-lesson btn-cw">К-24 · Классная</a>
+              <a href="trainer.html?variant=D-24" class="btn-lesson btn-hw">Д-24 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(24)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer style="margin-top: 40px; text-align: center; font-size: 14px; color: #7f6e52; border-top: 1px dashed #d8c9a8; padding-top: 20px;">
+      <p>✏️ Каждая работа мгновенно проверяет ответы (верно — зелёным, ошибка — красным).</p>
+      <p>В конце работы результат отправляется учителю в Telegram нажатием кнопки «Отправить в Telegram ✈️».</p>
+      <p style="margin-top:8px;">Математика 6 класс · ФГОС / ФОП · Разработано для открытого бесплатного обучения на GitHub Pages</p>
+    </footer>
+  </div>
+
+  <!-- Модальное окно: Памятка / Теория -->
+  <div class="modal-overlay" id="theoryModal" onclick="if(event.target === this) closeTheoryModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeTheoryModal()">×</button>
+      <div id="theoryContent"></div>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Настройки Telegram -->
+  <div class="modal-overlay" id="settingsModal" onclick="if(event.target === this) closeTelegramSettingsModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeTelegramSettingsModal()">×</button>
+      <h3 class="modal-title">⚙️ Настройки Telegram для учителя</h3>
+      
+      <p style="font-size:15px; margin-bottom:14px; color:#4a3f2b;">
+        Результаты ДЗ отправляются через официальный бот 
+        <a href="https://t.me/math6gradeZVEROK_bot" target="_blank" style="color:var(--chalk); font-weight:bold;">@math6gradeZVEROK_bot</a>.
+      </p>
+
+      <div style="background:#fff; border:1px solid #d4c4a4; padding:14px; border-radius:6px; margin-bottom:16px; font-size:14px;">
+        <b>Как учителю получать отчёты учеников:</b><br>
+        1. Откройте Telegram и напишите боту <a href="https://t.me/math6gradeZVEROK_bot" target="_blank" style="color:var(--chalk); font-weight:bold;">@math6gradeZVEROK_bot</a> команду <code>/start</code>.<br>
+        2. Узнайте свой числовой <b>Chat ID</b> (например, написав боту <code>@userinfobot</code>).<br>
+        3. Введите ваш <b>Chat ID</b> в поле ниже и нажмите «Проверить связь 🔔».
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <label for="settingChatId" style="font-weight:bold; font-size:15px;">Ваш Telegram Chat ID (или ID группы):</label>
+        <input type="text" id="settingChatId" class="student-name-input" placeholder="Например: 7928474241" style="font-size:16px;">
+        
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+          <button class="btn-hero" onclick="saveTelegramSettings()" style="padding:8px 18px; font-size:14.5px;">Сохранить в браузере 💾</button>
+          <button class="btn-send-tg" onclick="testTelegramPing()" style="padding:8px 18px; font-size:14.5px;">Проверить связь 🔔</button>
+        </div>
+        <div class="send-status-msg" id="settingStatusMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="theory.js"></script>
+  <script src="tasks.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Фильтрация карточек по уровню
+    function filterLessons(level, btn) {
+      $$(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const cards = $$(".lesson-card");
+      cards.forEach(card => {
+        const cardLevel = card.dataset.level;
+        if (level === "all") {
+          card.style.display = "flex";
+        } else if (level === "base" && cardLevel === "base") {
+          card.style.display = "flex";
+        } else if (level === "adv" && (cardLevel === "adv" || cardLevel === "oly")) {
+          card.style.display = "flex";
+        } else if (level === "oly" && cardLevel === "oly") {
+          card.style.display = "flex";
+        } else {
+          card.style.display = "none";
+        }
+      });
+
+      // Скрывать пустые модули
+      $$(".module-block").forEach(mod => {
+        const visibleCards = mod.querySelectorAll('.lesson-card:not([style*="display: none"])');
+        mod.style.display = visibleCards.length === 0 ? "none" : "block";
+      });
+    }
+  </script>
+</body>
+</html>
