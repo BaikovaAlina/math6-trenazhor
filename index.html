@@ -19,7 +19,7 @@
         </div>
       </div>
 
-      <h1 class="main-title">📐 Математика 6 класс · Уроки 1–24</h1>
+      <h1 class="main-title">📐 Математика 6 класс · Уроки 1–32 (12 модулей)</h1>
       <p class="subtitle">Интерактивный задачник-тренажёр: теория, классные работы и автоматическая проверка ДЗ с отправкой в Telegram</p>
     </header>
 
@@ -36,10 +36,10 @@
 
     <!-- Панель фильтров по уровням -->
     <div class="filter-bar">
-      <button class="filter-btn active" onclick="filterLessons('all', this)">Все уроки (1–24)</button>
+      <button class="filter-btn active" onclick="filterLessons('all', this)">Все уроки (1–32)</button>
       <button class="filter-btn" onclick="filterLessons('base', this)">Базовый уровень (Виленкин, Мерзляк)</button>
       <button class="filter-btn" onclick="filterLessons('adv', this)">Углублённый (Петерсон)</button>
-      <button class="filter-btn" onclick="filterLessons('oly', this)">Олимпиадные темы</button>
+      <button class="filter-btn" onclick="filterLessons('oly', this)">Олимпиадные темы & Практикум</button>
     </div>
 
     <!-- Список модулей и уроков -->
@@ -495,6 +495,170 @@
               <a href="trainer.html?variant=K-24" class="btn-lesson btn-cw">К-24 · Классная</a>
               <a href="trainer.html?variant=D-24" class="btn-lesson btn-hw">Д-24 · Домашняя</a>
               <button class="btn-lesson btn-theory" onclick="openTheoryModal(24)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 9 -->
+      <section class="module-block" data-module="9">
+        <div class="module-header">
+          <div class="module-num">9</div>
+          <h2 class="module-title">Практикум: Задачи на работу и движение</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 25 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 25</span>
+                <span class="badge badge-adv">Практикум · Петерсон</span>
+              </div>
+              <h4>Задачи на совместную работу, наполнение и слив бассейнов</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-25" class="btn-lesson btn-cw">К-25 · Классная</a>
+              <a href="trainer.html?variant=D-25" class="btn-lesson btn-hw">Д-25 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(25)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 26 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 26</span>
+                <span class="badge badge-base">Практикум</span>
+              </div>
+              <h4>Движение по реке (катер, плот, течение), движение вдогонку</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-26" class="btn-lesson btn-cw">К-26 · Классная</a>
+              <a href="trainer.html?variant=D-26" class="btn-lesson btn-hw">Д-26 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(26)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 10 -->
+      <section class="module-block" data-module="10">
+        <div class="module-header">
+          <div class="module-num">10</div>
+          <h2 class="module-title">Финансовая математика, сплавы и смеси</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 27 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 27</span>
+                <span class="badge badge-adv">Петерсон · Углублённый</span>
+              </div>
+              <h4>Концентрация растворов, сплавы, выпаривание и разбавление</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-27" class="btn-lesson btn-cw">К-27 · Классная</a>
+              <a href="trainer.html?variant=D-27" class="btn-lesson btn-hw">Д-27 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(27)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 28 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 28</span>
+                <span class="badge badge-base">Практическая математика</span>
+              </div>
+              <h4>Финансовая грамотность: бюджет, скидки, наценки, банковские проценты</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-28" class="btn-lesson btn-cw">К-28 · Классная</a>
+              <a href="trainer.html?variant=D-28" class="btn-lesson btn-hw">Д-28 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(28)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 11 -->
+      <section class="module-block" data-module="11">
+        <div class="module-header">
+          <div class="module-num">11</div>
+          <h2 class="module-title">Комбинаторика, графы и теория вероятностей</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 29 -->
+          <div class="lesson-card" data-level="adv">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 29</span>
+                <span class="badge badge-adv">ФГОС 2022 · Комбинаторика</span>
+              </div>
+              <h4>Элементы комбинаторики: правило произведения, перестановки, факториал</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-29" class="btn-lesson btn-cw">К-29 · Классная</a>
+              <a href="trainer.html?variant=D-29" class="btn-lesson btn-hw">Д-29 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(29)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 30 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 30</span>
+                <span class="badge badge-base">ФГОС 2022 · Вероятность</span>
+              </div>
+              <h4>Графы, лемма о рукопожатиях, классическая вероятность (P = m/n)</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-30" class="btn-lesson btn-cw">К-30 · Классная</a>
+              <a href="trainer.html?variant=D-30" class="btn-lesson btn-hw">Д-30 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(30)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Модуль 12 -->
+      <section class="module-block" data-module="12">
+        <div class="module-header">
+          <div class="module-num">12</div>
+          <h2 class="module-title">Итоговая аттестация, ВПР и олимпиадный финал</h2>
+        </div>
+        <div class="lesson-grid">
+          <!-- Урок 31 -->
+          <div class="lesson-card" data-level="base">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 31</span>
+                <span class="badge badge-base">ВПР · Итоговое повторение</span>
+              </div>
+              <h4>Итоговая аттестация: Подготовка к ВПР (Арифметика, дроби, уравнения)</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-31" class="btn-lesson btn-cw">К-31 · Классная</a>
+              <a href="trainer.html?variant=D-31" class="btn-lesson btn-hw">Д-31 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(31)" title="Теория и памятка">📖</button>
+            </div>
+          </div>
+
+          <!-- Урок 32 -->
+          <div class="lesson-card" data-level="oly">
+            <div class="lesson-top">
+              <div class="lesson-meta">
+                <span>Урок 32</span>
+                <span class="badge badge-oly">Олимпиадный финал</span>
+              </div>
+              <h4>Олимпиадный финал: Логика, метод Гаусса, инварианты и геометрия</h4>
+            </div>
+            <div class="lesson-actions">
+              <a href="trainer.html?variant=K-32" class="btn-lesson btn-cw">К-32 · Классная</a>
+              <a href="trainer.html?variant=D-32" class="btn-lesson btn-hw">Д-32 · Домашняя</a>
+              <button class="btn-lesson btn-theory" onclick="openTheoryModal(32)" title="Теория и памятка">📖</button>
             </div>
           </div>
         </div>

@@ -26,6 +26,58 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 /* ============================================================
+ * ФОРМАТИРОВАНИЕ ВЕРТИКАЛЬНЫХ ДРОБЕЙ (МАТЕМАТИЧЕСКАЯ ЧЕРТА)
+ * ============================================================ */
+
+function formatMath(text) {
+  if (!text || typeof text !== "string") return text;
+
+  // Защита URL-адресов от замены слэшей
+  const urls = [];
+  text = text.replace(/https?:\/\/[^\s"'<>]+/g, (m) => {
+    urls.push(m);
+    return `___URL_${urls.length - 1}___`;
+  });
+
+  // 1. Дроби в скобках: (expr) / (expr) или (expr) / num
+  text = text.replace(
+    /\(([^)]+)\)\s*\/\s*\(([^)]+)\)/g,
+    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+  );
+  text = text.replace(
+    /\(([^)]+)\)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)/g,
+    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+  );
+  text = text.replace(
+    /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*\(([^)]+)\)/g,
+    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+  );
+
+  // 2. Смешанные числа: e.g. "3 5/6", "-2 1/4"
+  text = text.replace(
+    /(?<![<a-zA-Z0-9\/:\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
+    `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
+  );
+
+  // 3. Отрицательные простые дроби: e.g. "-3/4", "−5/8"
+  text = text.replace(
+    /(?<![<a-zA-Z0-9\/:\\])[-−]\s*([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
+    `<span class="neg-frac"><span class="frac"><span class="num">$1</span><span class="den">$2</span></span></span>`
+  );
+
+  // 4. Обычные простые дроби: e.g. "3/4", "19/24", "x/12", "7 / 5"
+  text = text.replace(
+    /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
+    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+  );
+
+  // Восстановление URL-адресов
+  text = text.replace(/___URL_(\d+)___/g, (_, i) => urls[i]);
+
+  return text;
+}
+
+/* ============================================================
  * 1. НОРМАЛИЗАЦИЯ И ПРОВЕРКА ОТВЕТОВ
  * ============================================================ */
 
@@ -181,24 +233,24 @@ function loadVariant(vKey) {
 
     let html = `
       <div class="margin-line"></div>
-      <div class="crumb">${q.crumb || "Задание " + q.num}</div>
+      <div class="crumb">${formatMath(q.crumb || "Задание " + q.num)}</div>
       <h2 class="task-heading">
         <span class="task-num-badge">${q.num}</span>
-        ${q.title}
+        ${formatMath(q.title)}
       </h2>
-      ${q.sub ? `<div class="task-sub">${q.sub}</div>` : ""}
+      ${q.sub ? `<div class="task-sub">${formatMath(q.sub)}</div>` : ""}
       <div class="task-content">
     `;
 
     q.tasks.forEach((t, tIdx) => {
       html += `<div class="task-row">`;
       if (t.label) {
-        html += `<div class="task-text">${t.label}</div>`;
+        html += `<div class="task-text">${formatMath(t.label)}</div>`;
       }
       html += `<div class="task-expression">`;
       t.parts.forEach((part) => {
         if (typeof part === "string") {
-          html += `<span>${part}</span>`;
+          html += `<span>${formatMath(part)}</span>`;
         } else if (part._input !== undefined) {
           const inpMeta = t.inputs[part._input];
           const inputId = `inp_${qIdx}_${tIdx}_${part._input}`;
@@ -226,7 +278,7 @@ function loadVariant(vKey) {
       html += `
         <div class="hint-box">
           <span>💡</span>
-          <div>${q.hints.join("<br>")}</div>
+          <div>${q.hints.map(formatMath).join("<br>")}</div>
         </div>
       `;
     }
@@ -488,9 +540,9 @@ function calculateResults() {
       tHtml += `
         <tr>
           <td><b>${item.qNum}</b></td>
-          <td>${item.qTitle}</td>
-          <td>${item.userVal}</td>
-          <td>${item.isOk ? "—" : `<b>${item.correctVal}</b>`}</td>
+          <td>${formatMath(item.qTitle)}</td>
+          <td>${formatMath(item.userVal)}</td>
+          <td>${item.isOk ? "—" : `<b>${formatMath(item.correctVal)}</b>`}</td>
           <td>
             <span class="status-tag ${item.isOk ? "status-ok" : "status-bad"}">
               ${item.isOk ? "✓ Верно" : "✗ Ошибка"}
@@ -682,14 +734,14 @@ function openTheoryModal(lessonNum) {
   `;
 
   data.rules.forEach((rule) => {
-    html += `<div class="theory-rule-item">📌 ${rule}</div>`;
+    html += `<div class="theory-rule-item">📌 ${formatMath(rule)}</div>`;
   });
 
   html += `</div>`;
   if (data.sample) {
     html += `
       <div class="theory-sample">
-        <b>💡 Пример решения:</b><br>${data.sample}
+        <b>💡 Пример решения:</b><br>${formatMath(data.sample)}
       </div>
     `;
   }
