@@ -33,7 +33,8 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 /* ============================================================
- * 1. ФОРМАТИРОВАНИЕ ДРОБЕЙ И ФОРМУЛ (KATEX + FALLBACK)
+ * 1. ФОРМАТИРОВАНИЕ ДРОБЕЙ И ФОРМУЛ (KATEX / MATHJAX)
+ * Горизонтальная черта дробей, смешанные и отрицательные числа
  * ============================================================ */
 
 function safeKatex(tex, display = false) {
@@ -46,10 +47,11 @@ function safeKatex(tex, display = false) {
       });
     } catch (err) {
       console.warn("KaTeX render error:", err);
-      return tex;
+      return display ? `$$${tex}$$` : `$${tex}$`;
     }
   }
-  return tex;
+  // Чистый fallback для MathJax 3 или асинхронного рендеринга
+  return display ? `$$${tex}$$` : `$${tex}$`;
 }
 
 function findMatchingBrace(str, startIndex) {
@@ -69,8 +71,10 @@ function replaceFractions(text, protect) {
   while ((idx = text.indexOf("\\frac{", idx)) !== -1) {
     let prefix = text.substring(0, idx);
     let matchMixed = prefix.match(/([-−]?\s*\d+)\s*$/);
-    let whole = matchMixed ? matchMixed[1] : "";
-    let startReplace = matchMixed ? idx - matchMixed[0].length : idx;
+    let matchSign = !matchMixed ? prefix.match(/([-−])\s*$/) : null;
+    let whole = matchMixed ? matchMixed[1] : (matchSign ? matchSign[1] : "");
+    let matchLength = matchMixed ? matchMixed[0].length : (matchSign ? matchSign[0].length : 0);
+    let startReplace = matchLength > 0 ? idx - matchLength : idx;
 
     let numStart = idx + 6;
     let numEnd = findMatchingBrace(text, numStart - 1);
@@ -87,7 +91,8 @@ function replaceFractions(text, protect) {
     let num = text.substring(numStart, numEnd);
     let den = text.substring(denStart, denEnd);
 
-    let texFormula = whole ? `${whole.trim()}\\frac{${num.trim()}}{${den.trim()}}` : `\\frac{${num.trim()}}{${den.trim()}}`;
+    let cleanWhole = whole ? whole.trim().replace("−", "-") : "";
+    let texFormula = cleanWhole ? `${cleanWhole}\\frac{${num.trim()}}{${den.trim()}}` : `\\frac{${num.trim()}}{${den.trim()}}`;
     let rendered = protect(safeKatex(texFormula, false));
 
     text = text.substring(0, startReplace) + rendered + text.substring(denEnd + 1);
@@ -99,7 +104,7 @@ function replaceFractions(text, protect) {
 function formatMath(text) {
   if (!text || typeof text !== "string") return text;
 
-  // 1. Защита HTML тегов, URL-адресов и физических единиц со слешем (км/ч, м/с)
+  // 1. Защита HTML тегов, URL-адресов и физических единиц со слешем (км/ч, м/с, об/мин)
   const placeholders = [];
   const protect = (str) => {
     placeholders.push(str);
@@ -118,51 +123,47 @@ function formatMath(text) {
   text = text.replace(/\(\s*\\\((\\[^()]+)\\\)\s*\)/g, "\\($1\\)");
   text = text.replace(/\(\s*([A-Za-z]\s*=\s*[^()]*\\(?:pi|frac)[^()]*)\s*\)/g, "$1");
 
-  const hasKaTeX = typeof katex !== "undefined" && typeof katex.renderToString === "function";
+  // 2. Явный выключной math: $$...$$ или \[...\]
+  text = text.replace(/\$\$([^$]+)\$\$/g, (m, tex) => protect(safeKatex(tex.trim(), true)));
+  text = text.replace(/\\\[([\s\S]+?)\\\]/g, (m, tex) => protect(safeKatex(tex.trim(), true)));
 
-  if (hasKaTeX) {
-    // 2. Явный выключной math: $$...$$ или \[...\]
-    text = text.replace(/\$\$([^$]+)\$\$/g, (m, tex) => protect(safeKatex(tex.trim(), true)));
-    text = text.replace(/\\\[([\s\S]+?)\\\]/g, (m, tex) => protect(safeKatex(tex.trim(), true)));
+  // 3. Явный внутритекстовый math: $...$ или \(...\)
+  text = text.replace(/\$([^$]+)\$/g, (m, tex) => protect(safeKatex(tex.trim(), false)));
+  text = text.replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => protect(safeKatex(tex.trim(), false)));
 
-    // 3. Явный внутритекстовый math: $...$ или \(...\)
-    text = text.replace(/\$([^$]+)\$/g, (m, tex) => protect(safeKatex(tex.trim(), false)));
-    text = text.replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => protect(safeKatex(tex.trim(), false)));
+  // 4. Дроби любой степени вложенности и смешанные числа с LaTeX: \frac{a}{b}, 3\frac{1}{2}, -\frac{3}{5}
+  text = replaceFractions(text, protect);
 
-    // 4. Дроби любой степени вложенности и смешанные числа с LaTeX: \frac{a}{b}, 3\frac{1}{2}
-    text = replaceFractions(text, protect);
+  // 5. Формулы с числом Пи или спецсимволами: C = 2\pi r, S = \pi r^2, \pi \approx 3,14
+  text = text.replace(/([A-Za-z0-9_,\s·=+\-*/():]+(?:\\pi|\\approx)[A-Za-z0-9_,\s·=+\-*/()^]*)/g, (m, formula) => {
+    if (formula.includes("<") || formula.includes(">")) return formula;
+    let cleanTex = formula.replace(/(\d+),(\d+)/g, "$1{,}$2");
+    cleanTex = cleanTex.replace(/·/g, "\\cdot ");
+    return protect(safeKatex(cleanTex.trim(), false));
+  });
 
-    // 5. Формулы с числом Пи или спецсимволами: C = 2\pi r, S = \pi r^2, \pi \approx 3,14
-    text = text.replace(/([A-Za-z0-9_,\s·=+\-*/():]+(?:\\pi|\\approx)[A-Za-z0-9_,\s·=+\-*/()^]*)/g, (m, formula) => {
-      if (formula.includes("<") || formula.includes(">")) return formula;
-      let cleanTex = formula.replace(/(\d+),(\d+)/g, "$1{,}$2");
-      cleanTex = cleanTex.replace(/·/g, "\\cdot ");
-      return protect(safeKatex(cleanTex.trim(), false));
-    });
+  // 6. Смешанные числа с пробелом: 2 1/3, -3 2/5 -> KaTeX 2\frac{1}{3}, -3\frac{2}{5}
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([-−]?\s*\d+)\s+(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_>])/g, (m, whole, num, den) => {
+    let cleanWhole = whole.trim().replace("−", "-");
+    return protect(safeKatex(`${cleanWhole}\\frac{${num}}{${den}}`, false));
+  });
 
-    // 6. Простые текстовые дроби вида 3/4 или -5/12
-    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, sign, num, den) => {
-      return protect(safeKatex(`${sign}\\frac{${num}}{${den}}`, false));
-    });
-  } else {
-    // Чистый CSS fallback при отсутствии KaTeX
-    text = text.replace(
-      /([-−]?\d+)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
-      `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
-    );
-    text = text.replace(
-      /(?<![<a-zA-Z0-9\/:\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
-      `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
-    );
-    text = text.replace(
-      /([-−]?)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
-      `<span class="frac"><span class="num">$2</span><span class="den">$3</span></span>`
-    );
-    text = text.replace(
-      /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
-      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
-    );
-  }
+  // 7. Простые числовые дроби со слешем: 3/4, -5/12 -> KaTeX \frac{3}{4}, -\frac{5}{12}
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_>])/g, (m, sign, num, den) => {
+    let cleanSign = (sign || "").replace("−", "-");
+    return protect(safeKatex(`${cleanSign}\\frac{${num}}{${den}}`, false));
+  });
+
+  // 8. Алгебраические дроби с переменными: x/2, 35/y, a/b, 1/t, m/n (только латинские буквы)
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([a-zA-Z])\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_>])/g, (m, v, d) => {
+    return protect(safeKatex(`\\frac{${v}}{${d}}`, false));
+  });
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])(\d+)\s*\/\s*([a-zA-Z])(?![0-9a-zA-Zа-яА-Я_>])/g, (m, n, v) => {
+    return protect(safeKatex(`\\frac{${n}}{${v}}`, false));
+  });
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([a-zA-Z])\s*\/\s*([a-zA-Z])(?![0-9a-zA-Zа-яА-Я_>])/g, (m, v1, v2) => {
+    return protect(safeKatex(`\\frac{${v1}}{${v2}}`, false));
+  });
 
   // Восстановление защищённых фрагментов
   text = text.replace(/___PL_(\d+)___/g, (_, i) => placeholders[i]);
@@ -170,9 +171,10 @@ function formatMath(text) {
   return text;
 }
 
-// Запуск авторендеринга KaTeX по всему дереву DOM (второй проход безопасности)
+// Запуск авторендеринга KaTeX / MathJax 3 по всему дереву DOM (второй проход безопасности)
 function renderAllMath(rootEl = document.body) {
   if (!rootEl) return;
+  // 1. KaTeX auto-render
   if (typeof renderMathInElement === "function") {
     try {
       renderMathInElement(rootEl, {
@@ -189,6 +191,14 @@ function renderAllMath(rootEl = document.body) {
       console.warn("KaTeX render error:", e);
     }
   }
+  // 2. MathJax 3 typeset hook
+  if (typeof window !== "undefined" && window.MathJax && typeof window.MathJax.typesetPromise === "function") {
+    try {
+      window.MathJax.typesetPromise([rootEl]).catch((err) => console.warn("MathJax typeset error:", err));
+    } catch (e) {
+      console.warn("MathJax error:", e);
+    }
+  }
 }
 
 /* ============================================================
@@ -198,6 +208,8 @@ function renderAllMath(rootEl = document.body) {
 function canon(val) {
   if (val == null) return "";
   let s = String(val).trim().toLowerCase();
+  s = s.replace(/[−–—]/g, "-");
+  s = s.replace(/(\d+)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1 $2/$3");
   s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2");
   s = s.replace(/\$/g, "");
   s = s.replace(/[×*xх∙⋅]/g, "·");

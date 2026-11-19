@@ -885,7 +885,7 @@
                 <span>Урок 30</span>
                 <span class="badge badge-base">ФГОС 2022 · Вероятность</span>
               </div>
-              <h4>Графы, лемма о рукопожатиях, классическая вероятность (P = m/n)</h4>
+              <h4>Графы, лемма о рукопожатиях, классическая вероятность ($P = \frac{m}{n}$)</h4>
             </div>
             <div class="lesson-actions">
               <a href="trainer.html?variant=K-30" class="btn-lesson btn-cw">К-30 · Классная</a>
@@ -1129,19 +1129,30 @@
       }
     }
 
-    // Автоматический рендеринг KaTeX для всех формул на главной странице
+    // Автоматический рендеринг KaTeX / MathJax для всех формул на главной странице
     document.addEventListener("DOMContentLoaded", () => {
       if (typeof renderMathInElement === "function") {
-        renderMathInElement(document.body, {
-          delimiters: [
-            { left: "$$", right: "$$", display: true },
-            { left: "\\[", right: "\\]", display: true },
-            { left: "\\(", right: "\\)", display: false },
-            { left: "$", right: "$", display: false }
-          ],
-          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "input", "option"],
-          throwOnError: false
-        });
+        try {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "\\[", right: "\\]", display: true },
+              { left: "\\(", right: "\\)", display: false },
+              { left: "$", right: "$", display: false }
+            ],
+            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "input", "option"],
+            throwOnError: false
+          });
+        } catch (e) {
+          console.warn("KaTeX index render error:", e);
+        }
+      }
+      if (typeof window !== "undefined" && window.MathJax && typeof window.MathJax.typesetPromise === "function") {
+        try {
+          window.MathJax.typesetPromise([document.body]).catch((err) => console.warn("MathJax error:", err));
+        } catch (e) {
+          console.warn("MathJax typeset error:", e);
+        }
       }
     });
   </script>

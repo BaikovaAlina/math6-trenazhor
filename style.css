@@ -811,55 +811,9 @@ body {
   border-left: 3px solid #d4c4a4;
 }
 
-/* ==================== АДАПТИВНОСТЬ ДЛЯ СМАРТФОНОВ ==================== */
-/* ==================== ВЕРТИКАЛЬНЫЕ МАТЕМАТИЧЕСКИЕ ДРОБИ ==================== */
-.frac {
-  display: inline-flex;
-  flex-direction: column;
-  vertical-align: -0.6em;
-  text-align: center;
-  padding: 0 0.22em;
-  font-size: 0.95em;
-  line-height: 1.05;
-  font-family: var(--font-hand), "Times New Roman", serif;
-  font-weight: bold;
-}
-
-.frac > .num {
-  display: block;
-  padding: 0 0.15em 0.08em;
-  border-bottom: 2px solid currentColor;
-}
-
-.frac > .den {
-  display: block;
-  padding: 0.1em 0.15em 0;
-}
-
-.mixed-num {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  font-size: 1.05em;
-  vertical-align: baseline;
-}
-
-.neg-frac {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15em;
-  vertical-align: baseline;
-}
-
-.neg-frac::before {
-  content: "−";
-  font-size: 1.2em;
-  font-weight: bold;
-  line-height: 1;
-}
-
 /* ============================================================
- * МАТЕМАТИЧЕСКАЯ ТИПОГРАФИКА (KATEX) И БЕЙДЖИ УЧЕБНИКА
+ * МАТЕМАТИЧЕСКАЯ ТИПОГРАФИКА ДРОБЕЙ И ФОРМУЛ (KATEX / MATHJAX)
+ * Горизонтальная черта дробей, смешанные и отрицательные числа
  * ============================================================ */
 
 .task-ref {
@@ -870,35 +824,52 @@ body {
   display: none !important;
 }
 
+.hint-box {
+  display: none !important;
+}
+
+/* Чёткая горизонтальная черта дробей KaTeX на всех экранах и устройствах */
 .katex {
-  font-size: 1.15em;
+  font-size: 1.12em;
   text-rendering: geometricPrecision;
   color: inherit;
   max-width: 100%;
 }
 
+.katex .mfrac .frac-line {
+  border-bottom-style: solid !important;
+  border-bottom-width: 0.09em !important;
+  min-height: 1.5px !important;
+}
+
+/* Поддержка MathJax 3 CHTML */
+mjx-container[jax="CHTML"] {
+  font-size: 110% !important;
+  line-height: 0;
+}
+
+mjx-container[jax="CHTML"] mjx-line {
+  border-top-width: 0.09em !important;
+  min-height: 1.5px !important;
+}
+
+/* Мобильная адаптивность математических формул без переполнения и разрывов */
 .katex-html {
   white-space: normal;
 }
 
-.katex-display {
+.katex-display,
+mjx-container[display="true"] {
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
-  padding: 4px 0;
+  padding: 6px 0;
   margin: 0.5em 0;
-}
-
-.katex .frac-line {
-  border-bottom-width: 0.08em;
+  -webkit-overflow-scrolling: touch;
 }
 
 .task-row, .task-text, .task-expression {
   max-width: 100%;
-}
-
-.hint-box {
-  display: none !important;
 }
 
 /* ============================================================
