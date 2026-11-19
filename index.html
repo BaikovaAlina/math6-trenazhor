@@ -8,6 +8,20 @@
   <link rel="stylesheet" href="lib/katex/katex.min.css">
   <script src="lib/katex/katex.min.js"></script>
   <script src="lib/katex/auto-render.min.js"></script>
+  <!-- MathJax 3 Typography -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$", "$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code", "input", "option"]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 </head>
@@ -247,7 +261,7 @@
             <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 8 · 15 задач</span>
           </div>
           <h3>⭕ Окружность и круг</h3>
-          <p>Длина окружности $C = 2\pi r$, площадь круга $S = \pi r^2$, радиус, диаметр, число $\pi \approx 3{,}14$.</p>
+          <p>Длина окружности <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>2</mn><mi>π</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">C = 2\pi r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span></span>, площадь круга <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mi>π</mi><msup><mi>r</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S = \pi r^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span>, радиус, диаметр, число <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mo>≈</mo><mn>3</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>14</mn></mrow><annotation encoding="application/x-tex">\pi \approx 3{,}14</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">3</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">14</span></span></span></span>.</p>
           <div style="display:flex; gap:6px; margin-bottom:12px;">
             <span class="level-badge level-base">Базовый (5)</span>
             <span class="level-badge level-medium">Средний (5)</span>
@@ -277,7 +291,7 @@
             <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 10 · 15 задач</span>
           </div>
           <h3>📐 Координатная плоскость</h3>
-          <p>Оси абсцисс и ординат, четверти плоскости, координаты точек $(x; y)$, построение отрезков, многоугольников и симметрия.</p>
+          <p>Оси абсцисс и ординат, четверти плоскости, координаты точек <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>x</mi><mo separator="true">;</mo><mtext> </mtext><mi>y</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x;\, y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">;</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>, построение отрезков, многоугольников и симметрия.</p>
           <div style="display:flex; gap:6px; margin-bottom:12px;">
             <span class="level-badge level-base">Базовый (5)</span>
             <span class="level-badge level-medium">Средний (5)</span>
@@ -660,7 +674,7 @@
                 <span>Урок 19</span>
                 <span class="badge badge-base">Базовый + Геометрия</span>
               </div>
-              <h4>Окружность и круг. Длина окружности и площадь круга (C=2πR, S=πR²)</h4>
+              <h4>Окружность и круг. Длина окружности и площадь круга (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>2</mn><mi>π</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">C = 2\pi R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mi>π</mi><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S = \pi R^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span>)</h4>
             </div>
             <div class="lesson-actions">
               <a href="trainer.html?variant=K-19" class="btn-lesson btn-cw">К-19 · Классная</a>
@@ -885,7 +899,7 @@
                 <span>Урок 30</span>
                 <span class="badge badge-base">ФГОС 2022 · Вероятность</span>
               </div>
-              <h4>Графы, лемма о рукопожатиях, классическая вероятность ($P = \frac{m}{n}$)</h4>
+              <h4>Графы, лемма о рукопожатиях, классическая вероятность (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mfrac><mi>m</mi><mi>n</mi></mfrac></mrow><annotation encoding="application/x-tex">P = \frac{m}{n}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0404em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6954em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">m</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>)</h4>
             </div>
             <div class="lesson-actions">
               <a href="trainer.html?variant=K-30" class="btn-lesson btn-cw">К-30 · Классная</a>
@@ -1015,63 +1029,6 @@
         if (bank6Sec) {
           bank6Sec.style.display = "block";
           bank6Sec.scrollIntoView({ behavior: "smooth" });
-        }
-        modules.forEach(m => m.style.display = "none");
-        banners.forEach(b => b.style.display = "none");
-        return;
-      }
-
-      if (vprSec) vprSec.style.display = (type === "all" || type === "practicum") ? "block" : "none";
-      if (bank6Sec) bank6Sec.style.display = (type === "all") ? "block" : "none";
-
-      modules.forEach(mod => {
-        const modChapter = mod.dataset.chapter;
-        const modCards = Array.from(mod.querySelectorAll(".lesson-card"));
-
-        if (type === "all") {
-          mod.style.display = "block";
-          modCards.forEach(c => c.style.display = "flex");
-        } else if (type === "ch1" || type === "ch2" || type === "practicum") {
-          if (modChapter === type) {
-            mod.style.display = "block";
-            modCards.forEach(c => c.style.display = "flex");
-          } else {
-            mod.style.display = "none";
-          }
-        } else if (type === "adv") {
-          let visibleCount = 0;
-          modCards.forEach(c => {
-            const lvl = c.dataset.level;
-            if (lvl === "adv" || lvl === "oly") {
-              c.style.display = "flex";
-              visibleCount++;
-            } else {
-              c.style.display = "none";
-            }
-          });
-          mod.style.display = visibleCount > 0 ? "block" : "none";
-        }
-      });
-
-      // Отображение баннеров глав
-      if (type === "all") {
-        banners.forEach(b => b.style.display = "block");
-      } else if (type === "ch1") {
-        banners[0].style.display = "block";
-        if (banners[1]) banners[1].style.display = "none";
-        if (banners[2]) banners[2].style.display = "none";
-      } else if (type === "ch2") {
-        if (banners[0]) banners[0].style.display = "none";
-        if (banners[1]) banners[1].style.display = "block";
-        if (banners[2]) banners[2].style.display = "none";
-      } else if (type === "practicum") {
-        if (banners[0]) banners[0].style.display = "none";
-        if (banners[1]) banners[1].style.display = "none";
-        if (banners[2]) banners[2].style.display = "block";
-      } else {
-        banners.forEach(b => b.style.display = "none");
-      }
-    });
         }
         modules.forEach(m => m.style.display = "none");
         banners.forEach(b => b.style.display = "none");

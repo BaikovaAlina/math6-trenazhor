@@ -118,10 +118,17 @@ function formatMath(text) {
     protect
   );
 
-  // Очистка лишних круглых скобок вокруг математических формул: ($C = 2\pi r$) -> $C = 2\pi r$
+  // Защита единиц измерений с квадратами и кубами (см², м², дм³, см³)
+  text = text.replace(/\b(\d+(?:[,.]\d+)?)\s*(см²|м²|дм²|мм²|см³|м³|дм³|мм³)\b/gi, (m, n, u) => {
+    return protect(`${n} ${u}`);
+  });
+
+  // Защита текстовых ответов вида "(да/нет)" или "да/нет"
+  text = text.replace(/\b(да|нет)\s*\/\s*(да|нет)\b/gi, protect);
+
+  // Очистка внешних скобок вокруг явного LaTeX в долларах: ($C = 2\pi r$) -> $C = 2\pi r$
   text = text.replace(/\(\s*\$([^$]+)\$\s*\)/g, "$$$1$$");
   text = text.replace(/\(\s*\\\((\\[^()]+)\\\)\s*\)/g, "\\($1\\)");
-  text = text.replace(/\(\s*([A-Za-z]\s*=\s*[^()]*\\(?:pi|frac)[^()]*)\s*\)/g, "$1");
 
   // 2. Явный выключной math: $$...$$ или \[...\]
   text = text.replace(/\$\$([^$]+)\$\$/g, (m, tex) => protect(safeKatex(tex.trim(), true)));
@@ -134,12 +141,52 @@ function formatMath(text) {
   // 4. Дроби любой степени вложенности и смешанные числа с LaTeX: \frac{a}{b}, 3\frac{1}{2}, -\frac{3}{5}
   text = replaceFractions(text, protect);
 
-  // 5. Формулы с числом Пи или спецсимволами: C = 2\pi r, S = \pi r^2, \pi \approx 3,14
-  text = text.replace(/([A-Za-z0-9_,\s·=+\-*/():]+(?:\\pi|\\approx)[A-Za-z0-9_,\s·=+\-*/()^]*)/g, (m, formula) => {
-    if (formula.includes("<") || formula.includes(">")) return formula;
-    let cleanTex = formula.replace(/(\d+),(\d+)/g, "$1{,}$2");
-    cleanTex = cleanTex.replace(/·/g, "\\cdot ");
-    return protect(safeKatex(cleanTex.trim(), false));
+  // 5. Формулы геометрии круга и числа Пи:
+  // а) Формулы с равенством: C = 2πr = 2 · 3,14 · 5 = 31,4 или S = πr² или C = 2πR или C = πd
+  text = text.replace(/(?:([A-Za-z]\s*=\s*[^(),;!?\n<>]*?[π\\][^(),;!?\n<>]*?)(?=[.,;!?\s)]|$))/g, (m, formula) => {
+    let clean = formula.replace(/[π]/g, "\\pi ").replace(/[≈]/g, "\\approx ").replace(/²/g, "^2").replace(/³/g, "^3");
+    clean = clean.replace(/(\d+),(\d+)/g, "$1{,}$2").replace(/·/g, "\\cdot ");
+    return protect(safeKatex(clean.trim(), false));
+  });
+
+  // б) Приближения числа Пи: π ≈ 3,14 или π ≈ 3.14 или \pi \approx 3,14
+  text = text.replace(/(?:([π\\][^\s()]*\s*(?:[≈]|\\approx)\s*[0-9,.]+)(?=[.,;!?\s)]|$))/g, (m, f) => {
+    let clean = f.replace(/[π]/g, "\\pi ").replace(/[≈]/g, "\\approx ");
+    clean = clean.replace(/(\d+),(\d+)/g, "$1{,}$2");
+    return protect(safeKatex(clean.trim(), false));
+  });
+
+  // в) Приближения с дробью: π ≈ \frac{22}{7} или ≈ \frac{22}{7}
+  text = text.replace(/(?:([π\\][^\s()]*\s*(?:[≈]|\\approx)\s*\\?frac\{[^}]+\}\{[^}]+\}))/g, (m, f) => {
+    let clean = f.replace(/[π]/g, "\\pi ").replace(/[≈]/g, "\\approx ");
+    return protect(safeKatex(clean.trim(), false));
+  });
+
+  // г) Отношение: 1/π или 1 / \pi
+  text = text.replace(/(?:\b1\s*\/\s*([π]|\\pi)\b)/g, () => {
+    return protect(safeKatex("\\frac{1}{\\pi}", false));
+  });
+
+  // д) Автономный символ π в скобках или тексте
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([π])(?![0-9a-zA-Zа-яА-Я_>])/g, () => {
+    return protect(safeKatex("\\pi", false));
+  });
+
+  // е) Степени переменных в формулах: r², R², a³, x², y²
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([rRaAxXyY])([²³])(?![0-9a-zA-Zа-яА-Я_>])/g, (m, v, p) => {
+    const pow = p === "²" ? "2" : "3";
+    return protect(safeKatex(`${v}^${pow}`, false));
+  });
+
+  // ж) Числовые формулы квадратов: 4² = 16, 10²
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])(\d+)([²³])\s*=\s*(\d+)(?![0-9a-zA-Zа-яА-Я_>])/g, (m, base, p, res) => {
+    const pow = p === "²" ? "2" : "3";
+    return protect(safeKatex(`${base}^${pow} = ${res}`, false));
+  });
+
+  // з) Координаты точек: (x; y)
+  text = text.replace(/\(\s*x\s*;\s*y\s*\)/g, () => {
+    return protect(safeKatex("(x;\\, y)", false));
   });
 
   // 6. Смешанные числа с пробелом: 2 1/3, -3 2/5 -> KaTeX 2\frac{1}{3}, -3\frac{2}{5}
@@ -149,7 +196,7 @@ function formatMath(text) {
   });
 
   // 7. Простые числовые дроби со слешем: 3/4, -5/12 -> KaTeX \frac{3}{4}, -\frac{5}{12}
-  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_>])/g, (m, sign, num, den) => {
+  text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<,.])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_>,.])/g, (m, sign, num, den) => {
     let cleanSign = (sign || "").replace("−", "-");
     return protect(safeKatex(`${cleanSign}\\frac{${num}}{${den}}`, false));
   });
@@ -164,6 +211,9 @@ function formatMath(text) {
   text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\<])([a-zA-Z])\s*\/\s*([a-zA-Z])(?![0-9a-zA-Zа-яА-Я_>])/g, (m, v1, v2) => {
     return protect(safeKatex(`\\frac{${v1}}{${v2}}`, false));
   });
+
+  // Очистка любых случайных артефактов {,} в обычном тексте
+  text = text.replace(/\{,\}/g, ",");
 
   // Восстановление защищённых фрагментов
   text = text.replace(/___PL_(\d+)___/g, (_, i) => placeholders[i]);
