@@ -18,7 +18,10 @@
     <header class="site-header">
       <div class="top-bar">
         <a href="index.html">← Ко всем урокам</a>
-        <div style="display:flex; gap:10px; align-items:center;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="vpr-timer-container" id="vprTimerContainer" style="display:none;">
+            <span class="vpr-timer-badge" id="vprTimerBadge">⏱️ 60:00 (из 60 мин)</span>
+          </div>
           <button class="btn-settings" onclick="openTelegramSettingsModal()">⚙️ Настройки Telegram</button>
         </div>
       </div>
@@ -36,6 +39,11 @@
 
           <label style="font-size:13.5px; color:#6d593c; font-weight:bold; margin-top:4px;">Выбрать работу:</label>
           <select id="variantSelect" class="student-name-input" style="font-size:14.5px; padding:6px 8px; cursor:pointer;">
+            <optgroup label="⏱️ Пробные ВПР по математике (на время · 60 мин)">
+              <option value="VPR-1">⏱️ ВПР Вариант 1 (Демоверсия ФИОКО · 60 мин)</option>
+              <option value="VPR-2">⏱️ ВПР Вариант 2 (Основной тренировочный · 60 мин)</option>
+              <option value="VPR-3">⏱️ ВПР Вариант 3 (Повышенная сложность · 60 мин)</option>
+            </optgroup>
             <optgroup label="Глава I: Делимость чисел (Виленкин § 1–6)">
               <option value="K-1">Урок 1 · К-1 (Классная) — Делители и кратные (§ 1, 4)</option>
               <option value="D-1">Урок 1 · Д-1 (Домашняя) — Делители и кратные (§ 1, 4)</option>

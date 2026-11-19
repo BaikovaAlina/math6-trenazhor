@@ -895,6 +895,111 @@ body {
   max-width: 100%;
 }
 
+.hint-box {
+  display: none !important;
+}
+
+/* ============================================================
+ * ТАЙМЕР И СТИЛИ ПРОБНЫХ ВПР НА ВРЕМЯ (60 МИНУТ)
+ * ============================================================ */
+
+.vpr-timer-container {
+  display: flex;
+  align-items: center;
+}
+
+.vpr-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a202c;
+  color: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #4a5568;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
+}
+
+.vpr-timer-badge.timer-urgent {
+  background: #c53030 !important;
+  border-color: #9b2c2c !important;
+  animation: pulse-timer 0.9s infinite alternate;
+}
+
+@keyframes pulse-timer {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 4px #e53e3e;
+  }
+  to {
+    transform: scale(1.05);
+    box-shadow: 0 0 14px #e53e3e;
+  }
+}
+
+.vpr-section-banner {
+  background: linear-gradient(135deg, #fffaf0, #feebc8);
+  border: 2px solid #ecc94b;
+  border-radius: 14px;
+  padding: 24px;
+  margin: 28px 0;
+  box-shadow: 0 4px 14px rgba(214, 158, 46, 0.18);
+}
+
+.vpr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.vpr-card {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e0;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vpr-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.09);
+  border-color: #4299e1;
+}
+
+.vpr-card-badge {
+  align-self: flex-start;
+  background: #ebf8ff;
+  color: #2b6cb0;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+
+.vpr-card h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #2d3748;
+}
+
+.vpr-card p {
+  font-size: 13.5px;
+  color: #4a5568;
+  margin: 0 0 16px;
+  line-height: 1.45;
+  flex-grow: 1;
+}
+
 @media (max-width: 640px) {
   body {
     padding: 14px 8px 110px;

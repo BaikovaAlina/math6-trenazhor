@@ -19,6 +19,10 @@ const appState = {
   currentSlide: 0,
   startTime: null,
   results: null,
+  isVPR: false,
+  vprTimerInterval: null,
+  vprRemainingSec: 3600,
+  vprTotalSec: 3600,
 };
 
 // Вспомогательные функции селекторов
@@ -268,6 +272,23 @@ function initTrainer() {
   setupEvents();
 }
 
+function updateVPRTimerDisplay() {
+  const timerBadge = $("#vprTimerBadge");
+  if (!timerBadge) return;
+  const rem = Math.max(0, appState.vprRemainingSec);
+  const m = Math.floor(rem / 60);
+  const s = rem % 60;
+  const mm = m < 10 ? "0" + m : m;
+  const ss = s < 10 ? "0" + s : s;
+  timerBadge.textContent = `⏱️ ${mm}:${ss} (из 60 мин)`;
+
+  if (rem <= 300) {
+    timerBadge.classList.add("timer-urgent");
+  } else {
+    timerBadge.classList.remove("timer-urgent");
+  }
+}
+
 function loadVariant(vKey) {
   const data = TASKS[vKey];
   if (!data) return;
@@ -276,6 +297,38 @@ function loadVariant(vKey) {
   appState.currentSlide = 0;
   appState.startTime = new Date();
   appState.results = null;
+
+  // Очистка предыдущего таймера
+  if (appState.vprTimerInterval) {
+    clearInterval(appState.vprTimerInterval);
+    appState.vprTimerInterval = null;
+  }
+
+  // Режим ВПР на время
+  appState.isVPR = vKey.startsWith("VPR-") || Boolean(data.timeLimitMinutes);
+  const timerContainer = $("#vprTimerContainer");
+
+  if (appState.isVPR) {
+    appState.vprTotalSec = (data.timeLimitMinutes || 60) * 60;
+    appState.vprRemainingSec = appState.vprTotalSec;
+    if (timerContainer) timerContainer.style.display = "flex";
+    updateVPRTimerDisplay();
+
+    appState.vprTimerInterval = setInterval(() => {
+      appState.vprRemainingSec--;
+      updateVPRTimerDisplay();
+
+      if (appState.vprRemainingSec <= 0) {
+        clearInterval(appState.vprTimerInterval);
+        appState.vprTimerInterval = null;
+        alert("⏱️ Время вышло! Отведённые 60 минут завершились. Переходим к проверке и подсчёту баллов ВПР.");
+        checkCurrentSlide();
+        goToSlide(data.questions.length);
+      }
+    }, 1000);
+  } else {
+    if (timerContainer) timerContainer.style.display = "none";
+  }
 
   // Обновление заголовков
   const titleEl = $("#trainerTitle");
@@ -290,7 +343,7 @@ function loadVariant(vKey) {
   slidesContainer.innerHTML = "";
   const slides = [];
 
-  // Создаем слайды с вопросами
+  // Создаем слайды с вопросами (БЕЗ ПОДСКАЗОК)
   data.questions.forEach((q, qIdx) => {
     const slide = document.createElement("div");
     slide.className = "slide" + (qIdx === 0 ? " active" : "");
@@ -339,15 +392,6 @@ function loadVariant(vKey) {
       });
       html += `</div></div>`;
     });
-
-    if (q.hints && q.hints.length) {
-      html += `
-        <div class="hint-box">
-          <span>💡</span>
-          <div>${q.hints.map(formatMath).join("<br>")}</div>
-        </div>
-      `;
-    }
 
     html += `</div>`;
     slide.innerHTML = html;
@@ -438,8 +482,12 @@ function goToSlide(index) {
   });
   appState.currentSlide = index;
 
-  // Если перешли на слайд результатов — рассчитываем результат
+  // Если перешли на слайд результатов — останавливаем таймер и рассчитываем результат
   if (index === appState.slides.length - 1) {
+    if (appState.vprTimerInterval) {
+      clearInterval(appState.vprTimerInterval);
+      appState.vprTimerInterval = null;
+    }
     calculateResults();
   }
 
@@ -540,26 +588,55 @@ function calculateResults() {
   let gradeText = "2 (Требуется повторение)";
   let gradeClass = "grade-2";
 
-  if (percent >= CONFIG.gradeScale[5]) {
-    grade = 5;
-    gradeText = "5 (Отлично!) 🎉";
-    gradeClass = "grade-5";
-  } else if (percent >= CONFIG.gradeScale[4]) {
-    grade = 4;
-    gradeText = "4 (Хорошо) 👍";
-    gradeClass = "grade-4";
-  } else if (percent >= CONFIG.gradeScale[3]) {
-    grade = 3;
-    gradeText = "3 (Удовлетворительно) ✍️";
-    gradeClass = "grade-3";
+  if (appState.isVPR) {
+    // Официальная шкала перевода первичных баллов ВПР (6 класс, 13 заданий):
+    if (totalScore >= 12) {
+      grade = 5;
+      gradeText = "5 (Отлично) 🌟";
+      gradeClass = "grade-5";
+    } else if (totalScore >= 10) {
+      grade = 4;
+      gradeText = "4 (Хорошо) 👍";
+      gradeClass = "grade-4";
+    } else if (totalScore >= 6) {
+      grade = 3;
+      gradeText = "3 (Удовлетворительно) ✍️";
+      gradeClass = "grade-3";
+    } else {
+      grade = 2;
+      gradeText = "2 (Неудовлетворительно) ⚠️";
+      gradeClass = "grade-2";
+    }
+  } else {
+    if (percent >= CONFIG.gradeScale[5]) {
+      grade = 5;
+      gradeText = "5 (Отлично!) 🎉";
+      gradeClass = "grade-5";
+    } else if (percent >= CONFIG.gradeScale[4]) {
+      grade = 4;
+      gradeText = "4 (Хорошо) 👍";
+      gradeClass = "grade-4";
+    } else if (percent >= CONFIG.gradeScale[3]) {
+      grade = 3;
+      gradeText = "3 (Удовлетворительно) ✍️";
+      gradeClass = "grade-3";
+    }
   }
 
   // Расчет времени решения
-  const endTime = new Date();
-  const timeDiffSec = Math.round((endTime - appState.startTime) / 1000);
-  const minutes = Math.floor(timeDiffSec / 60);
-  const seconds = timeDiffSec % 60;
-  const timeString = `${minutes} мин ${seconds} сек`;
+  let timeString = "";
+  if (appState.isVPR) {
+    const spentSec = appState.vprTotalSec - Math.max(0, appState.vprRemainingSec);
+    const minutes = Math.floor(spentSec / 60);
+    const seconds = spentSec % 60;
+    timeString = `${minutes} мин ${seconds} сек (из 60 мин)`;
+  } else {
+    const endTime = new Date();
+    const timeDiffSec = Math.round((endTime - appState.startTime) / 1000);
+    const minutes = Math.floor(timeDiffSec / 60);
+    const seconds = timeDiffSec % 60;
+    timeString = `${minutes} мин ${seconds} сек`;
+  }
 
   appState.results = {
     totalScore,
@@ -631,6 +708,27 @@ function calculateResults() {
 function buildTelegramMessage(results) {
   const vData = TASKS[appState.variantKey];
   const name = appState.studentName || "Ученик (без имени)";
+
+  if (appState.isVPR) {
+    let msg = `⏱️ <b>ПРОБНЫЙ ВПР ПО МАТЕМАТИКЕ · 6 КЛАСС (РЕЖИМ НА ВРЕМЯ)</b>\n\n`;
+    msg += `👤 <b>Ученик:</b> ${name}\n`;
+    msg += `📋 <b>Экзаменационная работа:</b> ${vData.title}\n`;
+    msg += `⏱️ <b>Затраченное время:</b> ${results.timeString}\n`;
+    msg += `🎯 <b>Первичный балл ВПР:</b> ${results.totalScore} из ${results.maxScore} (${results.percent}%)\n`;
+    msg += `🏆 <b>Отметка по шкале ВПР (ФИОКО):</b> ${results.gradeText}\n`;
+    msg += `📅 <b>Дата сдачи:</b> ${results.date}\n\n`;
+
+    const mistakes = results.reviewItems.filter((i) => !i.isOk);
+    if (mistakes.length === 0) {
+      msg += `✅ <b>Все 13 заданий ВПР решены абсолютно верно! Высший балл!</b> 🌟`;
+    } else {
+      msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>\n`;
+      mistakes.forEach((m) => {
+        msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"\n`;
+      });
+    }
+    return msg;
+  }
 
   let msg = `📚 <b>Тренажёр по математике · 6 класс</b>\n\n`;
   msg += `👤 <b>Ученик:</b> ${name}\n`;

@@ -41,11 +41,46 @@
     <!-- Панель фильтров по уровням -->
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterLessons('all', this)">Все уроки (1–32)</button>
+      <button class="filter-btn" onclick="filterLessons('vpr', this)">⏱️ Пробные ВПР на время (60 мин)</button>
       <button class="filter-btn" onclick="filterLessons('ch1', this)">Глава I: Обыкновенные дроби (Виленкин Ч.1)</button>
       <button class="filter-btn" onclick="filterLessons('ch2', this)">Глава II: Рациональные числа (Виленкин Ч.2)</button>
-      <button class="filter-btn" onclick="filterLessons('practicum', this)">Практикум, ВПР & Олимпиады</button>
+      <button class="filter-btn" onclick="filterLessons('practicum', this)">Практикум & Олимпиады</button>
       <button class="filter-btn" onclick="filterLessons('adv', this)">Углублённый курс</button>
     </div>
+
+    <!-- Блок пробных ВПР на время (60 минут) -->
+    <section class="vpr-section-banner" id="vprSection">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span class="badge" style="background:#c53030; color:white; font-size:12.5px; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">ФИОКО · Экзаменационный режим</span>
+          <h2 style="margin:6px 0 4px; font-size:22px; color:#1a202c;">⏱️ Пробные ВПР по математике (6 класс) на время</h2>
+          <p style="margin:0; font-size:14.5px; color:#4a5568;">Реальные тренировочные варианты по 13 заданий на 60 минут с таймером обратного отсчёта, официальной шкалой оценки ФИОКО и моментальной доставкой отчёта учителю в Telegram.</p>
+        </div>
+      </div>
+
+      <div class="vpr-grid">
+        <div class="vpr-card">
+          <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
+          <h3>ВПР Вариант 1 · Демоверсия ФИОКО</h3>
+          <p>Официальная демоверсия: отрицательные числа, дроби, текстовые задачи на части, десятичные вычисления, практические расчеты, диаграммы и геометрия.</p>
+          <a href="trainer.html?variant=VPR-1" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать ВПР-1 ▶</a>
+        </div>
+
+        <div class="vpr-card">
+          <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
+          <h3>ВПР Вариант 2 · Основной вариант</h3>
+          <p>Типовой экзаменационный вариант полного курса 6 класса: дроби, модули, координаты, совместная работа, задачи на движение и логические выводы.</p>
+          <a href="trainer.html?variant=VPR-2" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать ВПР-2 ▶</a>
+        </div>
+
+        <div class="vpr-card">
+          <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
+          <h3>ВПР Вариант 3 · Повышенная сложность</h3>
+          <p>Углублённые задания для сильных учеников: сплавы и смеси, оптимизация тарифов, уравнения с модулями, объёмы тел и метод Гаусса.</p>
+          <a href="trainer.html?variant=VPR-3" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать ВПР-3 ▶</a>
+        </div>
+      </div>
+    </section>
 
     <!-- Список модулей и уроков -->
     <main id="modulesContainer">
@@ -740,6 +775,19 @@
 
       const banners = $$(".chapter-banner");
       const modules = $$(".module-block");
+      const vprSec = $("#vprSection");
+
+      if (type === "vpr") {
+        if (vprSec) {
+          vprSec.style.display = "block";
+          vprSec.scrollIntoView({ behavior: "smooth" });
+        }
+        modules.forEach(m => m.style.display = "none");
+        banners.forEach(b => b.style.display = "none");
+        return;
+      }
+
+      if (vprSec) vprSec.style.display = (type === "all" || type === "practicum") ? "block" : "none";
 
       modules.forEach(mod => {
         const modChapter = mod.dataset.chapter;
