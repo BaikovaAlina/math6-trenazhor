@@ -1107,9 +1107,8 @@ async function sendToTelegram() {
   if (!chatId) {
     showStatusMsg(
       "err",
-      "⚠️ Chat ID учителя не указан! Нажмите «⚙️ Настройки Telegram» вверху страницы и введите ваш Chat ID."
+      "⚠️ Chat ID учителя не указан в config.js!"
     );
-    openTelegramSettingsModal();
     return;
   }
 
@@ -1299,115 +1298,11 @@ function closeTheoryModal() {
   if (modal) modal.classList.remove("open");
 }
 
-function openTelegramSettingsModal() {
-  const modal = $("#settingsModal");
-  if (!modal) return;
-
-  // Автоматически подставляем Chat ID (сохранённый или по умолчанию 7928474241)
-  const currentChatId = getTelegramChatId();
-  const input = $("#settingChatId");
-  if (input) input.value = currentChatId;
-
-  const msgEl = $("#settingStatusMsg");
-  if (msgEl) {
-    if (currentChatId) {
-      msgEl.className = "send-status-msg ok";
-      msgEl.textContent = `✅ Chat ID подключён: ${currentChatId}`;
-    } else {
-      msgEl.className = "send-status-msg wait";
-      msgEl.textContent = "ℹ️ Введите числовой Chat ID и нажмите «Сохранить» или «Проверить связь».";
-    }
-  }
-
-  modal.classList.add("open");
-}
-
-function closeTelegramSettingsModal() {
-  const modal = $("#settingsModal");
-  if (modal) modal.classList.remove("open");
-}
-
-function saveTelegramSettings() {
-  const input = $("#settingChatId");
-  const msgEl = $("#settingStatusMsg");
-  if (!input) return;
-
-  const chatId = input.value.trim() || getTelegramChatId();
-  setTelegramChatId(chatId);
-
-  const dispChatId = $("#displayTeacherChatId");
-  if (dispChatId) dispChatId.textContent = chatId;
-
-  if (msgEl) {
-    msgEl.className = "send-status-msg ok";
-    msgEl.textContent = `✅ Chat ID (${chatId}) успешно сохранён в браузере!`;
-    setTimeout(() => {
-      closeTelegramSettingsModal();
-    }, 1400);
-  }
-}
-
-async function testTelegramPing() {
-  const input = $("#settingChatId");
-  const msgEl = $("#settingStatusMsg");
-  const chatId = (input && input.value.trim()) || getTelegramChatId();
-
-  if (!chatId) {
-    if (msgEl) {
-      msgEl.className = "send-status-msg err";
-      msgEl.textContent = "⚠️ Сначала введите Chat ID!";
-    }
-    return;
-  }
-
-  setTelegramChatId(chatId);
-
-  const dispChatId = $("#displayTeacherChatId");
-  if (dispChatId) dispChatId.textContent = chatId;
-
-  if (msgEl) {
-    msgEl.className = "send-status-msg wait";
-    msgEl.textContent = `Отправляю тестовый сигнал боту в чат ${chatId}... ⏳`;
-  }
-
-  const botToken = getTelegramBotToken();
-  const botUsername = (typeof CONFIG !== "undefined" && CONFIG.telegram && CONFIG.telegram.botUsername) || "math6gradeZVEROK_bot";
-
-  if (!botToken || botToken.startsWith("__")) {
-    if (msgEl) {
-      msgEl.className = "send-status-msg ok";
-      msgEl.textContent = `✅ Chat ID ${chatId} успешно сохранён! На GitHub Pages (где настроен секрет TELEGRAM_BOT_TOKEN) отчёты будут мгновенно доставляться ботом @${botUsername}.`;
-    }
-    return;
-  }
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: `🔔 <b>Проверка связи успешна!</b>\n\nТренажёр по математике (6 класс) подключён к Telegram-боту @${botUsername} (чат: <code>${chatId}</code>). Отчёты учеников будут приходить в этот чат! 🎉`,
-        parse_mode: "HTML",
-      }),
-    });
-
-    const data = await res.json();
-    if (res.ok && data.ok) {
-      if (msgEl) {
-        msgEl.className = "send-status-msg ok";
-        msgEl.textContent = `🎉 Связь подтверждена! Тестовое сообщение доставлено ботом @${botUsername} на Chat ID: ${chatId}.`;
-      }
-    } else {
-      throw new Error(data.description || `HTTP ${res.status}`);
-    }
-  } catch (err) {
-    if (msgEl) {
-      msgEl.className = "send-status-msg err";
-      msgEl.textContent = `❌ Ошибка: ${err.message}. Убедитесь, что вы нажали /start боту @${botUsername}.`;
-    }
-  }
-}
+// Заглушки для удалённых настроек Telegram
+function openTelegramSettingsModal() {}
+function closeTelegramSettingsModal() {}
+function saveTelegramSettings() {}
+function testTelegramPing() {}
 
 // Экспорт для Node.js окружения
 if (typeof window !== "undefined") {

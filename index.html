@@ -32,9 +32,6 @@
     <header class="site-header">
       <div class="top-bar">
         <div>ФГОС ООО & ФОП · УМК Виленкин, Петерсон, Мерзляк, Макарычев</div>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <button class="btn-settings" onclick="openTelegramSettingsModal()">⚙️ Настройки Telegram</button>
-        </div>
       </div>
 
       <h1 class="main-title">📐 Математика 6 класс · Уроки 1–32 (12 модулей)</h1>
@@ -964,37 +961,6 @@
     <div class="modal-box">
       <button class="modal-close" onclick="closeTheoryModal()">×</button>
       <div id="theoryContent"></div>
-    </div>
-  </div>
-
-  <!-- Модальное окно: Настройки Telegram -->
-  <div class="modal-overlay" id="settingsModal" onclick="if(event.target === this) closeTelegramSettingsModal()">
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeTelegramSettingsModal()">×</button>
-      <h3 class="modal-title">⚙️ Настройки Telegram для учителя</h3>
-      
-      <p style="font-size:15px; margin-bottom:14px; color:#4a3f2b;">
-        Результаты ДЗ отправляются через официальный бот 
-        <a href="https://t.me/math6gradeZVEROK_bot" target="_blank" style="color:var(--chalk); font-weight:bold;">@math6gradeZVEROK_bot</a>.
-      </p>
-
-      <div style="background:#fff; border:1px solid #d4c4a4; padding:14px; border-radius:6px; margin-bottom:16px; font-size:14px;">
-        <b>Как учителю получать отчёты учеников:</b><br>
-        1. Откройте Telegram и напишите боту <a href="https://t.me/math6gradeZVEROK_bot" target="_blank" style="color:var(--chalk); font-weight:bold;">@math6gradeZVEROK_bot</a> команду <code>/start</code>.<br>
-        2. Узнайте свой числовой <b>Chat ID</b> (например, написав боту <code>@userinfobot</code>).<br>
-        3. Введите ваш <b>Chat ID</b> в поле ниже и нажмите «Проверить связь 🔔».
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <label for="settingChatId" style="font-weight:bold; font-size:15px;">Ваш Telegram Chat ID (или ID группы):</label>
-        <input type="text" id="settingChatId" class="student-name-input" placeholder="Например: 7928474241" style="font-size:16px;">
-        
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
-          <button class="btn-hero" onclick="saveTelegramSettings()" style="padding:8px 18px; font-size:14.5px;">Сохранить в браузере 💾</button>
-          <button class="btn-send-tg" onclick="testTelegramPing()" style="padding:8px 18px; font-size:14.5px;">Проверить связь 🔔</button>
-        </div>
-        <div class="send-status-msg" id="settingStatusMsg"></div>
-      </div>
     </div>
   </div>
 

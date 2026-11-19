@@ -82,23 +82,6 @@ body {
   border-color: var(--red);
 }
 
-.btn-settings {
-  background: var(--sticky);
-  border: 1px solid var(--sticky-border);
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-family: var(--font-hand);
-  font-size: 13.5px;
-  cursor: pointer;
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
-  transition: transform 0.15s, background-color 0.2s;
-}
-
-.btn-settings:hover {
-  background: #fae89b;
-  transform: translateY(-1px);
-}
-
 .main-title {
   font-size: clamp(24px, 4vw, 36px);
   color: var(--chalk-dark);
