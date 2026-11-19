@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Математика 6 класс · Тренажёр, классные и домашние работы</title>
+  <title>Математика 6 класс · Тренажёр, классные и домашние работы (УМК Виленкин)</title>
+  <!-- KaTeX Math Typography -->
+  <link rel="stylesheet" href="lib/katex/katex.min.css">
+  <script src="lib/katex/katex.min.js"></script>
+  <script src="lib/katex/auto-render.min.js"></script>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 </head>
@@ -37,15 +41,20 @@
     <!-- Панель фильтров по уровням -->
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterLessons('all', this)">Все уроки (1–32)</button>
-      <button class="filter-btn" onclick="filterLessons('base', this)">Базовый уровень (Виленкин, Мерзляк)</button>
-      <button class="filter-btn" onclick="filterLessons('adv', this)">Углублённый (Петерсон)</button>
-      <button class="filter-btn" onclick="filterLessons('oly', this)">Олимпиадные темы & Практикум</button>
+      <button class="filter-btn" onclick="filterLessons('ch1', this)">Глава I: Обыкновенные дроби (Виленкин Ч.1)</button>
+      <button class="filter-btn" onclick="filterLessons('ch2', this)">Глава II: Рациональные числа (Виленкин Ч.2)</button>
+      <button class="filter-btn" onclick="filterLessons('practicum', this)">Практикум, ВПР & Олимпиады</button>
+      <button class="filter-btn" onclick="filterLessons('adv', this)">Углублённый курс</button>
     </div>
 
     <!-- Список модулей и уроков -->
     <main id="modulesContainer">
       <!-- Модуль 1 -->
-      <section class="module-block" data-module="1">
+      <div class="chapter-banner" style="background:linear-gradient(135deg, #1b4931, #2e7d32); color:white; padding:16px 20px; border-radius:12px; margin:24px 0 16px; box-shadow:0 3px 8px rgba(0,0,0,0.12);">
+        <h2 style="margin:0; font-size:20px; font-weight:700; color:#fff;">📘 ГЛАВА I. ОБЫКНОВЕННЫЕ ДРОБИ (Учебник Виленкина, Часть 1)</h2>
+        <p style="margin:4px 0 0; font-size:14px; opacity:0.9;">Делимость чисел, обыкновенные дроби, действия с дробями, отношения и пропорции (§ 1–24)</p>
+      </div>
+      <section class="module-block" data-module="1" data-chapter="ch1">
         <div class="module-header">
           <div class="module-num">1</div>
           <h2 class="module-title">Делимость натуральных чисел</h2>
@@ -102,7 +111,7 @@
       </section>
 
       <!-- Модуль 2 -->
-      <section class="module-block" data-module="2">
+      <section class="module-block" data-module="2" data-chapter="ch1">
         <div class="module-header">
           <div class="module-num">2</div>
           <h2 class="module-title">Обыкновенные дроби и вычисления</h2>
@@ -175,7 +184,7 @@
       </section>
 
       <!-- Модуль 3 -->
-      <section class="module-block" data-module="3">
+      <section class="module-block" data-module="3" data-chapter="ch1">
         <div class="module-header">
           <div class="module-num">3</div>
           <h2 class="module-title">Отношения, пропорции и проценты</h2>
@@ -232,7 +241,7 @@
       </section>
 
       <!-- Модуль 4 -->
-      <section class="module-block" data-module="4">
+      <section class="module-block" data-module="4" data-chapter="ch1">
         <div class="module-header">
           <div class="module-num">4</div>
           <h2 class="module-title">Положительные и отрицательные числа</h2>
@@ -305,7 +314,11 @@
       </section>
 
       <!-- Модуль 5 -->
-      <section class="module-block" data-module="5">
+      <div class="chapter-banner" style="background:linear-gradient(135deg, #1c3d5a, #2b6cb0); color:white; padding:16px 20px; border-radius:12px; margin:32px 0 16px; box-shadow:0 3px 8px rgba(0,0,0,0.12);">
+        <h2 style="margin:0; font-size:20px; font-weight:700; color:#fff;">📙 ГЛАВА II. РАЦИОНАЛЬНЫЕ ЧИСЛА (Учебник Виленкина, Часть 2)</h2>
+        <p style="margin:4px 0 0; font-size:14px; opacity:0.9;">Отрицательные числа, модуль, все арифметические действия, уравнения и координаты (§ 25–46)</p>
+      </div>
+      <section class="module-block" data-module="5" data-chapter="ch2">
         <div class="module-header">
           <div class="module-num">5</div>
           <h2 class="module-title">Выражения и линейные уравнения</h2>
@@ -362,7 +375,7 @@
       </section>
 
       <!-- Модуль 6 -->
-      <section class="module-block" data-module="6">
+      <section class="module-block" data-module="6" data-chapter="ch2">
         <div class="module-header">
           <div class="module-num">6</div>
           <h2 class="module-title">Наглядная геометрия, окружность и тела</h2>
@@ -419,7 +432,7 @@
       </section>
 
       <!-- Модуль 7 -->
-      <section class="module-block" data-module="7">
+      <section class="module-block" data-module="7" data-chapter="ch2">
         <div class="module-header">
           <div class="module-num">7</div>
           <h2 class="module-title">Координатная плоскость и статистика</h2>
@@ -460,7 +473,7 @@
       </section>
 
       <!-- Модуль 8 -->
-      <section class="module-block" data-module="8">
+      <section class="module-block" data-module="8" data-chapter="ch2">
         <div class="module-header">
           <div class="module-num">8</div>
           <h2 class="module-title">Множества, логика и олимпиадный практикум</h2>
@@ -501,7 +514,11 @@
       </section>
 
       <!-- Модуль 9 -->
-      <section class="module-block" data-module="9">
+      <div class="chapter-banner" style="background:linear-gradient(135deg, #5a2c1c, #9c4221); color:white; padding:16px 20px; border-radius:12px; margin:32px 0 16px; box-shadow:0 3px 8px rgba(0,0,0,0.12);">
+        <h2 style="margin:0; font-size:20px; font-weight:700; color:#fff;">🏆 ПРАКТИКУМ, ФИНАНСОВАЯ МАТЕМАТИКА, ВПР И ОЛИМПИАДЫ</h2>
+        <p style="margin:4px 0 0; font-size:14px; opacity:0.9;">Сложные текстовые задачи (бассейны, смеси, движение), комбинаторика и вероятность по ФГОС, подготовка к ВПР</p>
+      </div>
+      <section class="module-block" data-module="9" data-chapter="practicum">
         <div class="module-header">
           <div class="module-num">9</div>
           <h2 class="module-title">Практикум: Задачи на работу и движение</h2>
@@ -542,7 +559,7 @@
       </section>
 
       <!-- Модуль 10 -->
-      <section class="module-block" data-module="10">
+      <section class="module-block" data-module="10" data-chapter="practicum">
         <div class="module-header">
           <div class="module-num">10</div>
           <h2 class="module-title">Финансовая математика, сплавы и смеси</h2>
@@ -583,7 +600,7 @@
       </section>
 
       <!-- Модуль 11 -->
-      <section class="module-block" data-module="11">
+      <section class="module-block" data-module="11" data-chapter="practicum">
         <div class="module-header">
           <div class="module-num">11</div>
           <h2 class="module-title">Комбинаторика, графы и теория вероятностей</h2>
@@ -624,7 +641,7 @@
       </section>
 
       <!-- Модуль 12 -->
-      <section class="module-block" data-module="12">
+      <section class="module-block" data-module="12" data-chapter="practicum">
         <div class="module-header">
           <div class="module-num">12</div>
           <h2 class="module-title">Итоговая аттестация, ВПР и олимпиадный финал</h2>
@@ -717,31 +734,60 @@
   <script src="script.js"></script>
   <script>
     // Фильтрация карточек по уровню
-    function filterLessons(level, btn) {
+    function filterLessons(type, btn) {
       $$(".filter-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
-      const cards = $$(".lesson-card");
-      cards.forEach(card => {
-        const cardLevel = card.dataset.level;
-        if (level === "all") {
-          card.style.display = "flex";
-        } else if (level === "base" && cardLevel === "base") {
-          card.style.display = "flex";
-        } else if (level === "adv" && (cardLevel === "adv" || cardLevel === "oly")) {
-          card.style.display = "flex";
-        } else if (level === "oly" && cardLevel === "oly") {
-          card.style.display = "flex";
-        } else {
-          card.style.display = "none";
+      const banners = $$(".chapter-banner");
+      const modules = $$(".module-block");
+
+      modules.forEach(mod => {
+        const modChapter = mod.dataset.chapter;
+        const modCards = Array.from(mod.querySelectorAll(".lesson-card"));
+
+        if (type === "all") {
+          mod.style.display = "block";
+          modCards.forEach(c => c.style.display = "flex");
+        } else if (type === "ch1" || type === "ch2" || type === "practicum") {
+          if (modChapter === type) {
+            mod.style.display = "block";
+            modCards.forEach(c => c.style.display = "flex");
+          } else {
+            mod.style.display = "none";
+          }
+        } else if (type === "adv") {
+          let visibleCount = 0;
+          modCards.forEach(c => {
+            const lvl = c.dataset.level;
+            if (lvl === "adv" || lvl === "oly") {
+              c.style.display = "flex";
+              visibleCount++;
+            } else {
+              c.style.display = "none";
+            }
+          });
+          mod.style.display = visibleCount > 0 ? "block" : "none";
         }
       });
 
-      // Скрывать пустые модули
-      $$(".module-block").forEach(mod => {
-        const visibleCards = mod.querySelectorAll('.lesson-card:not([style*="display: none"])');
-        mod.style.display = visibleCards.length === 0 ? "none" : "block";
-      });
+      // Отображение баннеров глав
+      if (type === "all") {
+        banners.forEach(b => b.style.display = "block");
+      } else if (type === "ch1") {
+        banners[0].style.display = "block";
+        if (banners[1]) banners[1].style.display = "none";
+        if (banners[2]) banners[2].style.display = "none";
+      } else if (type === "ch2") {
+        if (banners[0]) banners[0].style.display = "none";
+        if (banners[1]) banners[1].style.display = "block";
+        if (banners[2]) banners[2].style.display = "none";
+      } else if (type === "practicum") {
+        if (banners[0]) banners[0].style.display = "none";
+        if (banners[1]) banners[1].style.display = "none";
+        if (banners[2]) banners[2].style.display = "block";
+      } else {
+        banners.forEach(b => b.style.display = "none");
+      }
     }
   </script>
 </body>

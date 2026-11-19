@@ -26,53 +26,115 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 /* ============================================================
- * ФОРМАТИРОВАНИЕ ВЕРТИКАЛЬНЫХ ДРОБЕЙ (МАТЕМАТИЧЕСКАЯ ЧЕРТА)
+ * ФОРМАТИРОВАНИЕ ДРОБЕЙ И ФОРМУЛ (KATEX + CSS FALLBACK)
  * ============================================================ */
 
 function formatMath(text) {
   if (!text || typeof text !== "string") return text;
 
-  // Защита URL-адресов от замены слэшей
-  const urls = [];
-  text = text.replace(/https?:\/\/[^\s"'<>]+/g, (m) => {
-    urls.push(m);
-    return `___URL_${urls.length - 1}___`;
-  });
+  // 1. Защита HTML тегов, URL-адресов и физических единиц
+  const placeholders = [];
+  const protect = (str) => {
+    placeholders.push(str);
+    return `___PL_${placeholders.length - 1}___`;
+  };
 
-  // 1. Дроби в скобках: (expr) / (expr) или (expr) / num
+  text = text.replace(/<[^>]+>/g, protect);
+  text = text.replace(/https?:\/\/[^\s"'<>]+/g, protect);
   text = text.replace(
-    /\(([^)]+)\)\s*\/\s*\(([^)]+)\)/g,
-    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
-  );
-  text = text.replace(
-    /\(([^)]+)\)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)/g,
-    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
-  );
-  text = text.replace(
-    /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*\(([^)]+)\)/g,
-    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+    /\b(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч)\s*\/\s*(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч|см³|м³|шт)\b/gi,
+    protect
   );
 
-  // 2. Смешанные числа: e.g. "3 5/6", "-2 1/4"
-  text = text.replace(
-    /(?<![<a-zA-Z0-9\/:\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
-    `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
-  );
+  // Проверяем доступность KaTeX
+  const hasKaTeX = typeof katex !== "undefined" && typeof katex.renderToString === "function";
 
-  // 3. Отрицательные простые дроби: e.g. "-3/4", "−5/8"
-  text = text.replace(
-    /(?<![<a-zA-Z0-9\/:\\])[-−]\s*([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
-    `<span class="neg-frac"><span class="frac"><span class="num">$1</span><span class="den">$2</span></span></span>`
-  );
+  if (hasKaTeX) {
+    // Явные формулы $...$
+    text = text.replace(/\$([^\$]+)\$/g, (m, formula) => {
+      try {
+        return katex.renderToString(formula.trim(), { throwOnError: false, displayMode: false });
+      } catch (e) {
+        return m;
+      }
+    });
 
-  // 4. Обычные простые дроби: e.g. "3/4", "19/24", "x/12", "7 / 5"
-  text = text.replace(
-    /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
-    `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
-  );
+    // Смешанные числа с LaTeX: e.g. 1\frac{2}{3} или 3 \frac{5}{12}
+    text = text.replace(/([-−]?\d+)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, whole, num, den) => {
+      try {
+        return katex.renderToString(`${whole}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+      } catch (e) {
+        return m;
+      }
+    });
 
-  // Восстановление URL-адресов
-  text = text.replace(/___URL_(\d+)___/g, (_, i) => urls[i]);
+    // Одиночные дроби LaTeX: \frac{a}{b} или -\frac{a}{b}
+    text = text.replace(/([-−]?)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, sign, num, den) => {
+      try {
+        return katex.renderToString(`${sign}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+      } catch (e) {
+        return m;
+      }
+    });
+
+    // Текстовые смешанные числа: "3 5/6", "-2 1/4"
+    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, whole, num, den) => {
+      try {
+        return katex.renderToString(`${whole}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+      } catch (e) {
+        return `<span class="mixed-num">${whole}<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span></span>`;
+      }
+    });
+
+    // Обычные текстовые простые дроби: "3/4", "-5/8"
+    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, sign, num, den) => {
+      try {
+        return katex.renderToString(`${sign}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+      } catch (e) {
+        return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+      }
+    });
+  } else {
+    // Чистый CSS fallback при отсутствии KaTeX
+    // 1. Дроби в скобках
+    text = text.replace(
+      /\(([^)]+)\)\s*\/\s*\(([^)]+)\)/g,
+      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+    );
+    text = text.replace(
+      /\(([^)]+)\)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)/g,
+      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+    );
+    text = text.replace(
+      /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*\(([^)]+)\)/g,
+      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+    );
+
+    // 2. Смешанные числа: "3 5/6" или 3\frac{5}{6}
+    text = text.replace(
+      /([-−]?\d+)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+      `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
+    );
+    text = text.replace(
+      /(?<![<a-zA-Z0-9\/:\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
+      `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
+    );
+
+    // 3. LaTeX \frac
+    text = text.replace(
+      /([-−]?)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+      `<span class="frac"><span class="num">$2</span><span class="den">$3</span></span>`
+    );
+
+    // 4. Обычные простые дроби: "3/4"
+    text = text.replace(
+      /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
+      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
+    );
+  }
+
+  // Восстановление защищённых фрагментов
+  text = text.replace(/___PL_(\d+)___/g, (_, i) => placeholders[i]);
 
   return text;
 }
@@ -85,6 +147,9 @@ function formatMath(text) {
 function canon(val) {
   if (val == null) return "";
   let s = String(val).trim().toLowerCase();
+  // Приведение LaTeX дробей \frac{a}{b} к обычному виду a/b
+  s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2");
+  s = s.replace(/\$/g, "");
   // Замена знаков умножения на точку
   s = s.replace(/[×*xх∙⋅]/g, "·");
   // Замена русских запятых в десятичных дробях для чисел
@@ -239,6 +304,7 @@ function loadVariant(vKey) {
         ${formatMath(q.title)}
       </h2>
       ${q.sub ? `<div class="task-sub">${formatMath(q.sub)}</div>` : ""}
+      ${q.ref ? `<div class="task-ref">📖 ${formatMath(q.ref)}</div>` : ""}
       <div class="task-content">
     `;
 
