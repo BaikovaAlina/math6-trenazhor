@@ -1,17 +1,17 @@
 /* ============================================================
- * SCRIPT.JS — ДВИЖОК ТРЕНАЖЁРА ПО МАТЕМАТИКЕ (6 КЛАСС)
+ * SCRIPT.JS — ДВИЖОК ТРЕНАЖЁРА ПО МАТЕМАТИКЕ (6 И 7 КЛАССЫ)
  * ============================================================
- * 1. Нормализация и проверка математических ответов
- * 2. Управление состоянием (State) и навигацией
- * 3. Рендеринг карточек заданий и полей ввода
- * 4. Подсчёт результатов, процентов и оценки
- * 5. Отправка результатов в Telegram Bot API
- * 6. Модальные окна (Теория / Настройки)
+ * 1. Форматирование математических формул и дробей (KaTeX)
+ * 2. Нормализация и проверка математических ответов
+ * 3. Управление состоянием (State), таймером с паузой и длительностью
+ * 4. Рендеринг карточек заданий и разбора решений (Explanations)
+ * 5. Официальные шкалы оценивания ВПР (6 и 7 классы) и генератор
+ * 6. Интеграция с Telegram Bot API и экспорт отчётов
  * ============================================================ */
 
 "use strict";
 
-// Состояние приложения
+// Глобальное состояние приложения
 const appState = {
   studentName: "",
   variantKey: "K-1",
@@ -20,23 +20,26 @@ const appState = {
   startTime: null,
   results: null,
   isVPR: false,
-  vprTimerInterval: null,
-  vprRemainingSec: 3600,
-  vprTotalSec: 3600,
+  timerInterval: null,
+  timerRemainingSec: 3600,
+  timerTotalSec: 3600,
+  isTimerEnabled: false,
+  isPaused: false,
+  timerDurationConfig: "auto" // 'auto', 'none', '15', '30', '45', '60', '90'
 };
 
-// Вспомогательные функции селекторов
+// Селекторы DOM
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 /* ============================================================
- * ФОРМАТИРОВАНИЕ ДРОБЕЙ И ФОРМУЛ (KATEX + CSS FALLBACK)
+ * 1. ФОРМАТИРОВАНИЕ ДРОБЕЙ И ФОРМУЛ (KATEX + FALLBACK)
  * ============================================================ */
 
 function formatMath(text) {
   if (!text || typeof text !== "string") return text;
 
-  // 1. Защита HTML тегов, URL-адресов и физических единиц
+  // Защита тегов, ссылок и физических единиц
   const placeholders = [];
   const protect = (str) => {
     placeholders.push(str);
@@ -46,15 +49,14 @@ function formatMath(text) {
   text = text.replace(/<[^>]+>/g, protect);
   text = text.replace(/https?:\/\/[^\s"'<>]+/g, protect);
   text = text.replace(
-    /\b(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч)\s*\/\s*(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч|см³|м³|шт)\b/gi,
+    /(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч)\s*\/\s*(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч|см³|м³|шт)/gi,
     protect
   );
 
-  // Проверяем доступность KaTeX
   const hasKaTeX = typeof katex !== "undefined" && typeof katex.renderToString === "function";
 
   if (hasKaTeX) {
-    // Явные формулы $...$
+    // $...$ явный LaTeX
     text = text.replace(/\$([^\$]+)\$/g, (m, formula) => {
       try {
         return katex.renderToString(formula.trim(), { throwOnError: false, displayMode: false });
@@ -63,76 +65,57 @@ function formatMath(text) {
       }
     });
 
-    // Смешанные числа с LaTeX: e.g. 1\frac{2}{3} или 3 \frac{5}{12}
-    text = text.replace(/([-−]?\d+)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, whole, num, den) => {
+    // Смешанные числа: 1rac{2}{3}
+    text = text.replace(/([-−]?\d+)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, whole, num, den) => {
       try {
-        return katex.renderToString(`${whole}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+        return katex.renderToString(`${whole}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
       } catch (e) {
         return m;
       }
     });
 
-    // Одиночные дроби LaTeX: \frac{a}{b} или -\frac{a}{b}
-    text = text.replace(/([-−]?)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, sign, num, den) => {
+    // Одиночные дроби LaTeX: rac{a}{b}
+    text = text.replace(/([-−]?)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, sign, num, den) => {
       try {
-        return katex.renderToString(`${sign}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+        return katex.renderToString(`${sign}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
       } catch (e) {
         return m;
       }
     });
 
-    // Текстовые смешанные числа: "3 5/6", "-2 1/4"
-    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, whole, num, den) => {
+    // Текстовые смешанные числа: "3 5/6"
+    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, whole, num, den) => {
       try {
-        return katex.renderToString(`${whole}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+        return katex.renderToString(`${whole}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
       } catch (e) {
         return `<span class="mixed-num">${whole}<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span></span>`;
       }
     });
 
-    // Обычные текстовые простые дроби: "3/4", "-5/8"
-    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, sign, num, den) => {
+    // Обычные текстовые простые дроби: "3/4"
+    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, sign, num, den) => {
       try {
-        return katex.renderToString(`${sign}\\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
+        return katex.renderToString(`${sign}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
       } catch (e) {
         return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
       }
     });
   } else {
-    // Чистый CSS fallback при отсутствии KaTeX
-    // 1. Дроби в скобках
+    // Чистый CSS fallback
     text = text.replace(
-      /\(([^)]+)\)\s*\/\s*\(([^)]+)\)/g,
-      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
-    );
-    text = text.replace(
-      /\(([^)]+)\)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)/g,
-      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
-    );
-    text = text.replace(
-      /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*\(([^)]+)\)/g,
-      `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
-    );
-
-    // 2. Смешанные числа: "3 5/6" или 3\frac{5}{6}
-    text = text.replace(
-      /([-−]?\d+)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+      /([-−]?\d+)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g,
       `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
     );
     text = text.replace(
-      /(?<![<a-zA-Z0-9\/:\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
+      /(?<![<a-zA-Z0-9\/:\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
       `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
     );
-
-    // 3. LaTeX \frac
     text = text.replace(
-      /([-−]?)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+      /([-−]?)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g,
       `<span class="frac"><span class="num">$2</span><span class="den">$3</span></span>`
     );
-
-    // 4. Обычные простые дроби: "3/4"
     text = text.replace(
-      /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
+      /(?<![<a-zA-Z0-9\/:\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
       `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
     );
   }
@@ -144,36 +127,28 @@ function formatMath(text) {
 }
 
 /* ============================================================
- * 1. НОРМАЛИЗАЦИЯ И ПРОВЕРКА ОТВЕТОВ
+ * 2. НОРМАЛИЗАЦИЯ И ПРОВЕРКА ОТВЕТОВ
  * ============================================================ */
 
-// Очистка и канонизация строки ответа
 function canon(val) {
   if (val == null) return "";
   let s = String(val).trim().toLowerCase();
-  // Приведение LaTeX дробей \frac{a}{b} к обычному виду a/b
-  s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2");
+  s = s.replace(/\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2");
   s = s.replace(/\$/g, "");
-  // Замена знаков умножения на точку
   s = s.replace(/[×*xх∙⋅]/g, "·");
-  // Замена русских запятых в десятичных дробях для чисел
   s = s.replace(/°/g, "");
-  // Удаление лишних пробелов вокруг знаков
   s = s.replace(/\s+/g, " ");
   return s;
 }
 
-// Нормализация координат вида "( 3 ; -2 )" -> "3;-2"
 function canonCoords(val) {
   let s = canon(val);
   s = s.replace(/[()]/g, "").replace(/\s+/g, "").replace(/,/g, ";");
   return s;
 }
 
-// Парсинг списка чисел (порядок не важен)
 function parseList(val) {
   if (!val) return [];
-  // Извлекаем все целые и дробные числа или слова
   return String(val)
     .toLowerCase()
     .split(/[,;\s]+/)
@@ -182,12 +157,9 @@ function parseList(val) {
     .sort();
 }
 
-// Проверка одного поля ввода
 function checkAnswer(userVal, correctPattern, type) {
   if (!userVal || !userVal.trim()) return false;
   const userTrim = userVal.trim();
-
-  // Если несколько вариантов ответа разделены пайпом |
   const acceptable = correctPattern.split("|").map((p) => p.trim());
 
   if (type === "list") {
@@ -209,7 +181,6 @@ function checkAnswer(userVal, correctPattern, type) {
     return false;
   }
 
-  // Обычное сравнение с учетом математической гибкости
   const uCanon = canon(userTrim).replace(/\s/g, "");
   for (const pat of acceptable) {
     const pCanon = canon(pat).replace(/\s/g, "");
@@ -236,11 +207,134 @@ function checkAnswer(userVal, correctPattern, type) {
 }
 
 /* ============================================================
- * 2. ИНИЦИАЛИЗАЦИЯ И РЕНДЕРИНГ ТРЕНАЖЁРА
+ * 3. ТАЙМЕР ОБРАТНОГО ОТСЧЁТА С ПАУЗОЙ И НАСТРОЙКОЙ
+ * ============================================================ */
+
+function updateTimerDisplay() {
+  const timerBadge = $("#vprTimerBadge");
+  if (!timerBadge) return;
+
+  const rem = Math.max(0, appState.timerRemainingSec);
+  const m = Math.floor(rem / 60);
+  const s = rem % 60;
+  const mm = m < 10 ? "0" + m : m;
+  const ss = s < 10 ? "0" + s : s;
+  const totalMin = Math.round(appState.timerTotalSec / 60);
+
+  timerBadge.textContent = `⏱️ ${mm}:${ss} (из ${totalMin} мин)`;
+
+  // Предупреждение за 5 минут (300 секунд)
+  if (rem <= 300) {
+    timerBadge.classList.add("timer-urgent");
+  } else {
+    timerBadge.classList.remove("timer-urgent");
+  }
+}
+
+function startTimer(totalSeconds) {
+  stopTimer();
+  appState.isTimerEnabled = true;
+  appState.isPaused = false;
+  appState.timerTotalSec = totalSeconds;
+  appState.timerRemainingSec = totalSeconds;
+
+  const timerContainer = $("#vprTimerContainer");
+  if (timerContainer) timerContainer.style.display = "flex";
+
+  const pauseBtn = $("#btnTimerPause");
+  if (pauseBtn) {
+    pauseBtn.textContent = "⏸️ Пауза";
+    pauseBtn.classList.remove("paused");
+  }
+
+  const pauseOverlay = $("#pauseOverlay");
+  if (pauseOverlay) pauseOverlay.style.display = "none";
+
+  updateTimerDisplay();
+
+  appState.timerInterval = setInterval(() => {
+    if (appState.isPaused) return;
+
+    appState.timerRemainingSec--;
+    updateTimerDisplay();
+
+    if (appState.timerRemainingSec <= 0) {
+      stopTimer();
+      alert("⏱️ Время вышло! Переходим к автоматической проверке и подсчёту баллов.");
+      checkCurrentSlide();
+      goToSlide(appState.slides.length - 1);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (appState.timerInterval) {
+    clearInterval(appState.timerInterval);
+    appState.timerInterval = null;
+  }
+}
+
+function togglePauseTimer() {
+  if (!appState.isTimerEnabled) return;
+
+  appState.isPaused = !appState.isPaused;
+  const pauseBtn = $("#btnTimerPause");
+  const pauseOverlay = $("#pauseOverlay");
+
+  if (appState.isPaused) {
+    if (pauseBtn) {
+      pauseBtn.textContent = "▶️ Продолжить";
+      pauseBtn.classList.add("paused");
+    }
+    if (pauseOverlay) pauseOverlay.style.display = "flex";
+  } else {
+    if (pauseBtn) {
+      pauseBtn.textContent = "⏸️ Пауза";
+      pauseBtn.classList.remove("paused");
+    }
+    if (pauseOverlay) pauseOverlay.style.display = "none";
+  }
+}
+
+function resumeFromPause() {
+  if (appState.isPaused) {
+    togglePauseTimer();
+  }
+}
+
+function applyTimerDuration(durationVal, defaultMinutes) {
+  appState.timerDurationConfig = durationVal;
+  const timerContainer = $("#vprTimerContainer");
+
+  if (durationVal === "none") {
+    stopTimer();
+    appState.isTimerEnabled = false;
+    if (timerContainer) timerContainer.style.display = "none";
+    return;
+  }
+
+  let minutes = 0;
+  if (durationVal === "auto") {
+    minutes = defaultMinutes || 0;
+  } else {
+    minutes = parseInt(durationVal, 10) || 0;
+  }
+
+  if (minutes > 0) {
+    startTimer(minutes * 60);
+  } else {
+    stopTimer();
+    appState.isTimerEnabled = false;
+    if (timerContainer) timerContainer.style.display = "none";
+  }
+}
+
+/* ============================================================
+ * 4. ИНИЦИАЛИЗАЦИЯ И РЕНДЕРИНГ ТРЕНАЖЁРА
  * ============================================================ */
 
 function initTrainer() {
-  // Загружаем сохраненное имя
+  // Загружаем сохранённое имя ученика
   const savedName = localStorage.getItem("math6_student_name") || "";
   const nameInput = $("#studentNameInput");
   if (nameInput) {
@@ -252,19 +346,67 @@ function initTrainer() {
     });
   }
 
-  // Определение варианта из URL (?variant=K-1)
+  // Определение варианта из URL (?variant=VPR-6-1 или ?variant=T6-1)
   const urlParams = new URLSearchParams(window.location.search);
   const variantParam = urlParams.get("variant");
-  if (variantParam && TASKS[variantParam]) {
-    appState.variantKey = variantParam;
+  if (variantParam) {
+    if (variantParam === "GEN-VPR-6" || variantParam === "VPR-6-GEN") {
+      appState.variantKey = generateVPRVariant(6);
+    } else if (variantParam === "GEN-VPR-7" || variantParam === "VPR-7-GEN") {
+      appState.variantKey = generateVPRVariant(7);
+    } else if (typeof TASKS !== "undefined" && TASKS[variantParam]) {
+      appState.variantKey = variantParam;
+    }
   }
 
+  // Настройка выпадающего списка вариантов
   const variantSelect = $("#variantSelect");
   if (variantSelect) {
+    // Проверяем, есть ли текущий вариант в списке, если нет — добавляем
+    if (!variantSelect.querySelector(`option[value="${appState.variantKey}"]`)) {
+      const opt = document.createElement("option");
+      opt.value = appState.variantKey;
+      opt.textContent = `🎯 ${appState.variantKey}`;
+      variantSelect.appendChild(opt);
+    }
     variantSelect.value = appState.variantKey;
     variantSelect.addEventListener("change", (e) => {
-      loadVariant(e.target.value);
+      const val = e.target.value;
+      if (val === "GEN-VPR-6") {
+        const k = generateVPRVariant(6);
+        ensureVariantOption(k, "🎲 ВПР 6 класс · Новый сгенерированный вариант");
+        variantSelect.value = k;
+        loadVariant(k);
+      } else if (val === "GEN-VPR-7") {
+        const k = generateVPRVariant(7);
+        ensureVariantOption(k, "🎲 ВПР 7 класс · Новый сгенерированный вариант");
+        variantSelect.value = k;
+        loadVariant(k);
+      } else {
+        loadVariant(val);
+      }
     });
+  }
+
+  // Селектор длительности таймера
+  const timerDurationSelect = $("#timerDurationSelect");
+  if (timerDurationSelect) {
+    timerDurationSelect.addEventListener("change", (e) => {
+      const vData = TASKS[appState.variantKey];
+      const defaultMin = vData ? (vData.timeLimitMinutes || (vData.isVPR ? (vData.grade === 7 ? 90 : 60) : 0)) : 0;
+      applyTimerDuration(e.target.value, defaultMin);
+    });
+  }
+
+  // Кнопка паузы
+  const pauseBtn = $("#btnTimerPause");
+  if (pauseBtn) {
+    pauseBtn.addEventListener("click", togglePauseTimer);
+  }
+
+  const resumeOverlayBtn = $("#btnResumeFromOverlay");
+  if (resumeOverlayBtn) {
+    resumeOverlayBtn.addEventListener("click", resumeFromPause);
   }
 
   // Запуск выбранного варианта
@@ -272,86 +414,83 @@ function initTrainer() {
   setupEvents();
 }
 
-function updateVPRTimerDisplay() {
-  const timerBadge = $("#vprTimerBadge");
-  if (!timerBadge) return;
-  const rem = Math.max(0, appState.vprRemainingSec);
-  const m = Math.floor(rem / 60);
-  const s = rem % 60;
-  const mm = m < 10 ? "0" + m : m;
-  const ss = s < 10 ? "0" + s : s;
-  timerBadge.textContent = `⏱️ ${mm}:${ss} (из 60 мин)`;
-
-  if (rem <= 300) {
-    timerBadge.classList.add("timer-urgent");
-  } else {
-    timerBadge.classList.remove("timer-urgent");
+function ensureVariantOption(key, label) {
+  const sel = $("#variantSelect");
+  if (!sel) return;
+  let opt = sel.querySelector(`option[value="${key}"]`);
+  if (!opt) {
+    opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = label;
+    sel.insertBefore(opt, sel.firstChild);
   }
 }
 
 function loadVariant(vKey) {
-  const data = TASKS[vKey];
-  if (!data) return;
+  if (typeof TASKS === "undefined" || !TASKS[vKey]) {
+    console.warn("Variant not found in TASKS:", vKey);
+    return;
+  }
 
+  const data = TASKS[vKey];
   appState.variantKey = vKey;
   appState.currentSlide = 0;
   appState.startTime = new Date();
   appState.results = null;
 
-  // Очистка предыдущего таймера
-  if (appState.vprTimerInterval) {
-    clearInterval(appState.vprTimerInterval);
-    appState.vprTimerInterval = null;
-  }
+  // Определение типа работы (ВПР или тренировка)
+  appState.isVPR = Boolean(data.isVPR) || vKey.startsWith("VPR-");
 
-  // Режим ВПР на время
-  appState.isVPR = vKey.startsWith("VPR-") || Boolean(data.timeLimitMinutes);
-  const timerContainer = $("#vprTimerContainer");
+  // Инициализация таймера в зависимости от настройки
+  const durationSelect = $("#timerDurationSelect");
+  const selectedDuration = durationSelect ? durationSelect.value : "auto";
+  const defaultMinutes = data.timeLimitMinutes || (appState.isVPR ? (data.grade === 7 ? 90 : 60) : 0);
 
-  if (appState.isVPR) {
-    appState.vprTotalSec = (data.timeLimitMinutes || 60) * 60;
-    appState.vprRemainingSec = appState.vprTotalSec;
-    if (timerContainer) timerContainer.style.display = "flex";
-    updateVPRTimerDisplay();
+  applyTimerDuration(selectedDuration, defaultMinutes);
 
-    appState.vprTimerInterval = setInterval(() => {
-      appState.vprRemainingSec--;
-      updateVPRTimerDisplay();
-
-      if (appState.vprRemainingSec <= 0) {
-        clearInterval(appState.vprTimerInterval);
-        appState.vprTimerInterval = null;
-        alert("⏱️ Время вышло! Отведённые 60 минут завершились. Переходим к проверке и подсчёту баллов ВПР.");
-        checkCurrentSlide();
-        goToSlide(data.questions.length);
-      }
-    }, 1000);
-  } else {
-    if (timerContainer) timerContainer.style.display = "none";
-  }
-
-  // Обновление заголовков
+  // Обновление заголовка и темы
   const titleEl = $("#trainerTitle");
   if (titleEl) titleEl.textContent = data.title;
   const topicEl = $("#trainerTopic");
   if (topicEl) topicEl.textContent = data.topic;
 
-  // Рендеринг слайдов
+  // Очистка и сборка слайдов
   const slidesContainer = $("#slidesDeck");
   if (!slidesContainer) return;
 
-  slidesContainer.innerHTML = "";
+  // Сохраняем pauseOverlay если есть
+  slidesContainer.innerHTML = `
+    <div class="pause-overlay" id="pauseOverlay" style="display:none;">
+      <h3>⏸️ Работа на паузе</h3>
+      <p>Таймер приостановлен. Задания скрыты до продолжения работы.</p>
+      <button type="button" class="btn-hero" id="btnResumeFromOverlay" style="padding:10px 24px; font-size:16px;">▶️ Продолжить решение</button>
+    </div>
+  `;
+
+  // Перепривязываем кнопку в overlay
+  const resumeOverlayBtn = $("#btnResumeFromOverlay");
+  if (resumeOverlayBtn) resumeOverlayBtn.addEventListener("click", resumeFromPause);
+
   const slides = [];
 
-  // Создаем слайды с вопросами (БЕЗ ПОДСКАЗОК)
+  // Создаём слайды с заданиями (БЕЗ ПОДСКАЗОК во время решения!)
   data.questions.forEach((q, qIdx) => {
     const slide = document.createElement("div");
     slide.className = "slide" + (qIdx === 0 ? " active" : "");
     slide.dataset.slideIndex = qIdx;
 
+    let levelBadgeHtml = "";
+    if (q.level) {
+      const lvlClass = q.level === "базовый" ? "level-base" : q.level === "средний" ? "level-medium" : "level-hard";
+      levelBadgeHtml = `<span class="level-badge ${lvlClass}">${q.level}</span>`;
+    }
+
     let html = `
       <div class="margin-line"></div>
-      <div class="crumb">${formatMath(q.crumb || "Задание " + q.num)}</div>
+      <div class="crumb" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>${formatMath(q.crumb || "Задание " + q.num)}</span>
+        ${levelBadgeHtml}
+      </div>
       <h2 class="task-heading">
         <span class="task-num-badge">${q.num}</span>
         ${formatMath(q.title)}
@@ -394,12 +533,12 @@ function loadVariant(vKey) {
     });
 
     html += `</div>`;
-    slide.innerHTML = html;
+    slide.innerHTML += html;
     slidesContainer.appendChild(slide);
     slides.push(slide);
   });
 
-  // Добавляем итоговый слайд результатов
+  // Итоговый слайд результатов с кнопками "Пройти ещё раз" и "Новый вариант"
   const resultsSlide = document.createElement("div");
   resultsSlide.className = "slide";
   resultsSlide.id = "resultsSlide";
@@ -416,13 +555,15 @@ function loadVariant(vKey) {
       </div>
     </div>
     
-    <h3 style="margin-bottom:12px; color:var(--chalk);">📋 Разбор выполненных заданий:</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+      <h3 style="margin:0; color:var(--chalk);">📋 Подробный разбор выполненных заданий и ошибок:</h3>
+    </div>
     <div id="reviewContainer"></div>
 
     <div class="send-box">
       <h3>📩 Отправить результат учителю</h3>
       <p style="font-size:14.5px; color:#52441a;">
-        Результат будет мгновенно доставлен в Telegram-бот учителю.
+        Результат с оценкой и подробным отчётом будет доставлен в Telegram-бот учителю.
       </p>
       <div class="send-inputs">
         <input type="text" class="student-name-input" id="reportStudentName" placeholder="Фамилия и Имя ученика" value="${appState.studentName}" />
@@ -432,9 +573,10 @@ function loadVariant(vKey) {
       <div class="send-status-msg" id="sendStatusMsg"></div>
     </div>
 
-    <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
-      <button class="btn-nav" id="btnRestart">🔄 Пройти заново</button>
-      <a href="index.html" class="btn-nav" style="text-decoration:none;">📚 Ко всем урокам</a>
+    <div style="display:flex; gap:12px; justify-content:center; margin-top:24px; flex-wrap:wrap;">
+      <button class="btn-nav" id="btnRestart">🔄 Пройти ещё раз</button>
+      <button class="btn-new-variant" id="btnNewVariant">🎲 Сгенерировать новый вариант</button>
+      <a href="index.html" class="btn-nav" style="text-decoration:none;">📚 Ко всем темам и ВПР</a>
     </div>
   `;
   slidesContainer.appendChild(resultsSlide);
@@ -442,10 +584,32 @@ function loadVariant(vKey) {
 
   appState.slides = slides;
   updateNav();
+
+  // Привязка кнопок результатов
+  const btnRestart = $("#btnRestart");
+  if (btnRestart) {
+    btnRestart.addEventListener("click", () => loadVariant(appState.variantKey));
+  }
+
+  const btnNewVariant = $("#btnNewVariant");
+  if (btnNewVariant) {
+    btnNewVariant.addEventListener("click", () => {
+      const grade = data.grade || 6;
+      if (typeof generateVPRVariant === "function") {
+        const nextKey = generateVPRVariant(grade);
+        ensureVariantOption(nextKey, `🎲 ВПР ${grade} класс · Свежий вариант`);
+        const variantSelect = $("#variantSelect");
+        if (variantSelect) variantSelect.value = nextKey;
+        loadVariant(nextKey);
+      } else {
+        loadVariant(appState.variantKey);
+      }
+    });
+  }
 }
 
 /* ============================================================
- * 3. НАВИГАЦИЯ И ПРОВЕРКА ПОЛЕЙ
+ * 5. НАВИГАЦИЯ И ПЕРЕХОД ПО СЛАЙДАМ
  * ============================================================ */
 
 function updateNav() {
@@ -482,12 +646,9 @@ function goToSlide(index) {
   });
   appState.currentSlide = index;
 
-  // Если перешли на слайд результатов — останавливаем таймер и рассчитываем результат
+  // Если открылся слайд результатов — выключаем таймер и формируем разбор
   if (index === appState.slides.length - 1) {
-    if (appState.vprTimerInterval) {
-      clearInterval(appState.vprTimerInterval);
-      appState.vprTimerInterval = null;
-    }
+    stopTimer();
     calculateResults();
   }
 
@@ -495,7 +656,6 @@ function goToSlide(index) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Проверка всех полей ввода на текущем слайде
 function checkCurrentSlide() {
   const currentSlideEl = appState.slides[appState.currentSlide];
   if (!currentSlideEl) return;
@@ -522,16 +682,15 @@ function checkCurrentSlide() {
 }
 
 /* ============================================================
- * 4. ПОДСЧЁТ РЕЗУЛЬТАТОВ И ОЦЕНИВАНИЕ
+ * 6. РАСЧЁТ РЕЗУЛЬТАТОВ, ОЦЕНКА ВПР И ПОДРОБНЫЙ РАЗБОР
  * ============================================================ */
 
 function calculateResults() {
+  const vData = TASKS[appState.variantKey];
   const allInputs = $$("#slidesDeck .math-input");
   let totalScore = 0;
   let maxScore = 0;
   const reviewItems = [];
-
-  // Группировка по группам оценивания (если заданы)
   const groups = {};
 
   allInputs.forEach((inp) => {
@@ -544,9 +703,13 @@ function calculateResults() {
     const type = inp.dataset.type;
     const isOk = checkAnswer(val, pat, type);
 
+    // Поиск вопроса для извлечения краткого решения (explanation)
+    const qObj = vData && vData.questions ? vData.questions.find((q) => String(q.num) === String(qNum)) : null;
+    const explanation = qObj ? qObj.explanation : "";
+
     if (grp) {
       if (!groups[grp]) {
-        groups[grp] = { ok: true, w: w, qNum, qTitle, userVal: [], correctVal: [] };
+        groups[grp] = { ok: true, w: w, qNum, qTitle, userVal: [], correctVal: [], explanation };
       }
       if (!isOk) groups[grp].ok = false;
       groups[grp].userVal.push(val || "—");
@@ -562,11 +725,11 @@ function calculateResults() {
         isOk,
         score: isOk ? w : 0,
         maxScore: w,
+        explanation
       });
     }
   });
 
-  // Добавляем групповые задания
   Object.keys(groups).forEach((gKey) => {
     const g = groups[gKey];
     maxScore += g.w;
@@ -579,57 +742,81 @@ function calculateResults() {
       isOk: g.ok,
       score: g.ok ? g.w : 0,
       maxScore: g.w,
+      explanation: g.explanation
     });
   });
 
-  // Расчет процента и оценки
   const percent = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
   let grade = 2;
   let gradeText = "2 (Требуется повторение)";
   let gradeClass = "grade-2";
 
+  // Официальные шкалы перевода баллов ВПР (ФИОКО)
   if (appState.isVPR) {
-    // Официальная шкала перевода первичных баллов ВПР (6 класс, 13 заданий):
-    if (totalScore >= 12) {
-      grade = 5;
-      gradeText = "5 (Отлично) 🌟";
-      gradeClass = "grade-5";
-    } else if (totalScore >= 10) {
-      grade = 4;
-      gradeText = "4 (Хорошо) 👍";
-      gradeClass = "grade-4";
-    } else if (totalScore >= 6) {
-      grade = 3;
-      gradeText = "3 (Удовлетворительно) ✍️";
-      gradeClass = "grade-3";
+    const gradeLevel = (vData && vData.grade) || 6;
+    if (gradeLevel === 7) {
+      // 7 класс: 16 заданий, 16 баллов
+      if (totalScore >= 15) {
+        grade = 5;
+        gradeText = "5 (Отлично) 🌟";
+        gradeClass = "grade-5";
+      } else if (totalScore >= 12) {
+        grade = 4;
+        gradeText = "4 (Хорошо) 👍";
+        gradeClass = "grade-4";
+      } else if (totalScore >= 7) {
+        grade = 3;
+        gradeText = "3 (Удовлетворительно) ✍️";
+        gradeClass = "grade-3";
+      } else {
+        grade = 2;
+        gradeText = "2 (Неудовлетворительно) ⚠️";
+        gradeClass = "grade-2";
+      }
     } else {
-      grade = 2;
-      gradeText = "2 (Неудовлетворительно) ⚠️";
-      gradeClass = "grade-2";
+      // 6 класс: 13 заданий, 13 баллов
+      if (totalScore >= 12) {
+        grade = 5;
+        gradeText = "5 (Отлично) 🌟";
+        gradeClass = "grade-5";
+      } else if (totalScore >= 10) {
+        grade = 4;
+        gradeText = "4 (Хорошо) 👍";
+        gradeClass = "grade-4";
+      } else if (totalScore >= 6) {
+        grade = 3;
+        gradeText = "3 (Удовлетворительно) ✍️";
+        gradeClass = "grade-3";
+      } else {
+        grade = 2;
+        gradeText = "2 (Неудовлетворительно) ⚠️";
+        gradeClass = "grade-2";
+      }
     }
   } else {
-    if (percent >= CONFIG.gradeScale[5]) {
+    // Стандартная шкала по процентам
+    if (percent >= (CONFIG.gradeScale ? CONFIG.gradeScale[5] : 85)) {
       grade = 5;
       gradeText = "5 (Отлично!) 🎉";
       gradeClass = "grade-5";
-    } else if (percent >= CONFIG.gradeScale[4]) {
+    } else if (percent >= (CONFIG.gradeScale ? CONFIG.gradeScale[4] : 70)) {
       grade = 4;
       gradeText = "4 (Хорошо) 👍";
       gradeClass = "grade-4";
-    } else if (percent >= CONFIG.gradeScale[3]) {
+    } else if (percent >= (CONFIG.gradeScale ? CONFIG.gradeScale[3] : 50)) {
       grade = 3;
       gradeText = "3 (Удовлетворительно) ✍️";
       gradeClass = "grade-3";
     }
   }
 
-  // Расчет времени решения
+  // Расчёт времени решения
   let timeString = "";
-  if (appState.isVPR) {
-    const spentSec = appState.vprTotalSec - Math.max(0, appState.vprRemainingSec);
+  if (appState.isTimerEnabled) {
+    const spentSec = appState.timerTotalSec - Math.max(0, appState.timerRemainingSec);
     const minutes = Math.floor(spentSec / 60);
     const seconds = spentSec % 60;
-    timeString = `${minutes} мин ${seconds} сек (из 60 мин)`;
+    timeString = `${minutes} мин ${seconds} сек (из ${Math.round(appState.timerTotalSec / 60)} мин)`;
   } else {
     const endTime = new Date();
     const timeDiffSec = Math.round((endTime - appState.startTime) / 1000);
@@ -646,10 +833,10 @@ function calculateResults() {
     gradeText,
     timeString,
     reviewItems,
-    date: new Date().toLocaleString("ru-RU"),
+    date: new Date().toLocaleString("ru-RU")
   };
 
-  // Вывод на экран
+  // Вывод баллов и оценки
   const scoreDisp = $("#scoreDisplay");
   if (scoreDisp) scoreDisp.textContent = `${totalScore} / ${maxScore} баллов`;
 
@@ -662,97 +849,122 @@ function calculateResults() {
     gradeDisp.className = `grade-badge ${gradeClass}`;
   }
 
-  // Рендеринг таблицы разбора
+  // Рендеринг подробных карточек разбора решений и ошибок
   const revCont = $("#reviewContainer");
   if (revCont) {
-    let tHtml = `
-      <table class="review-table">
-        <thead>
-          <tr>
-            <th>№</th>
-            <th>Тема задания</th>
-            <th>Ваш ответ</th>
-            <th>Верный ответ</th>
-            <th>Итог</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
+    let html = "";
     reviewItems.forEach((item) => {
-      tHtml += `
-        <tr>
-          <td><b>${item.qNum}</b></td>
-          <td>${formatMath(item.qTitle)}</td>
-          <td>${formatMath(item.userVal)}</td>
-          <td>${item.isOk ? "—" : `<b>${formatMath(item.correctVal)}</b>`}</td>
-          <td>
-            <span class="status-tag ${item.isOk ? "status-ok" : "status-bad"}">
-              ${item.isOk ? "✓ Верно" : "✗ Ошибка"}
+      const isGood = item.isOk;
+      html += `
+        <div class="review-card-item ${isGood ? "is-correct" : "is-incorrect"}">
+          <div class="review-item-header">
+            <div class="review-item-title">
+              Задание №${item.qNum} · ${formatMath(item.qTitle)}
+            </div>
+            <span class="status-tag ${isGood ? "status-ok" : "status-bad"}">
+              ${isGood ? "✓ Верно (+1 балл)" : "✗ Ошибка (0 баллов)"}
             </span>
-          </td>
-        </tr>
+          </div>
+
+          <div class="review-item-answers">
+            <div class="review-user-ans ${isGood ? "good" : "bad"}">
+              Ваш ответ: <b>${formatMath(item.userVal)}</b>
+            </div>
+            ${!isGood ? `<div class="review-correct-ans">Правильный ответ: <b>${formatMath(item.correctVal)}</b></div>` : ""}
+          </div>
+
+          ${
+            item.explanation
+              ? `
+            <details class="explanation-details" ${!isGood ? "open" : ""}>
+              <summary class="explanation-summary">💡 Пояснение и ход решения</summary>
+              <div class="explanation-body">${formatMath(item.explanation)}</div>
+            </details>
+          `
+              : ""
+          }
+        </div>
       `;
     });
-
-    tHtml += `</tbody></table>`;
-    revCont.innerHTML = tHtml;
+    revCont.innerHTML = html;
   }
 }
 
 /* ============================================================
- * 5. ОТПРАВКА В TELEGRAM BOT API И СКАЧИВАНИЕ ОТЧЁТА
+ * 7. ОТПРАВКА В TELEGRAM BOT API И СКАЧИВАНИЕ ОТЧЁТА
  * ============================================================ */
 
-// Формирование текстового отчёта
 function buildTelegramMessage(results) {
   const vData = TASKS[appState.variantKey];
   const name = appState.studentName || "Ученик (без имени)";
+  const gradeLevel = (vData && vData.grade) || 6;
 
   if (appState.isVPR) {
-    let msg = `⏱️ <b>ПРОБНЫЙ ВПР ПО МАТЕМАТИКЕ · 6 КЛАСС (РЕЖИМ НА ВРЕМЯ)</b>\n\n`;
-    msg += `👤 <b>Ученик:</b> ${name}\n`;
-    msg += `📋 <b>Экзаменационная работа:</b> ${vData.title}\n`;
-    msg += `⏱️ <b>Затраченное время:</b> ${results.timeString}\n`;
-    msg += `🎯 <b>Первичный балл ВПР:</b> ${results.totalScore} из ${results.maxScore} (${results.percent}%)\n`;
-    msg += `🏆 <b>Отметка по шкале ВПР (ФИОКО):</b> ${results.gradeText}\n`;
-    msg += `📅 <b>Дата сдачи:</b> ${results.date}\n\n`;
+    let msg = `⏱️ <b>ПРОБНЫЙ ВПР ПО МАТЕМАТИКЕ · ${gradeLevel} КЛАСС</b>
+
+`;
+    msg += `👤 <b>Ученик:</b> ${name}
+`;
+    msg += `📋 <b>Экзаменационная работа:</b> ${vData.title}
+`;
+    msg += `⏱️ <b>Затраченное время:</b> ${results.timeString}
+`;
+    msg += `🎯 <b>Первичный балл ВПР:</b> ${results.totalScore} из ${results.maxScore} (${results.percent}%)
+`;
+    msg += `🏆 <b>Отметка по шкале ВПР (ФИОКО):</b> ${results.gradeText}
+`;
+    msg += `📅 <b>Дата сдачи:</b> ${results.date}
+
+`;
 
     const mistakes = results.reviewItems.filter((i) => !i.isOk);
     if (mistakes.length === 0) {
-      msg += `✅ <b>Все 13 заданий ВПР решены абсолютно верно! Высший балл!</b> 🌟`;
+      msg += `✅ <b>Все задания ВПР решены абсолютно верно! Высший балл!</b> 🌟`;
     } else {
-      msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>\n`;
+      msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>
+`;
       mistakes.forEach((m) => {
-        msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"\n`;
+        msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"
+`;
       });
     }
     return msg;
   }
 
-  let msg = `📚 <b>Тренажёр по математике · 6 класс</b>\n\n`;
-  msg += `👤 <b>Ученик:</b> ${name}\n`;
-  msg += `📖 <b>Работа:</b> ${vData.title}\n`;
-  msg += `📌 <b>Тема:</b> ${vData.topic}\n`;
-  msg += `⏱ <b>Время работы:</b> ${results.timeString}\n`;
-  msg += `📊 <b>Результат:</b> ${results.totalScore} из ${results.maxScore} баллов (${results.percent}%)\n`;
-  msg += `🏆 <b>Оценка:</b> ${results.gradeText}\n`;
-  msg += `📅 <b>Дата:</b> ${results.date}\n\n`;
+  let msg = `📚 <b>Тренажёр по математике · 6 класс</b>
+
+`;
+  msg += `👤 <b>Ученик:</b> ${name}
+`;
+  msg += `📖 <b>Работа:</b> ${vData.title}
+`;
+  msg += `📌 <b>Тема:</b> ${vData.topic}
+`;
+  msg += `⏱ <b>Время работы:</b> ${results.timeString}
+`;
+  msg += `📊 <b>Результат:</b> ${results.totalScore} из ${results.maxScore} баллов (${results.percent}%)
+`;
+  msg += `🏆 <b>Оценка:</b> ${results.gradeText}
+`;
+  msg += `📅 <b>Дата:</b> ${results.date}
+
+`;
 
   const mistakes = results.reviewItems.filter((i) => !i.isOk);
   if (mistakes.length === 0) {
     msg += `✅ <b>Все задания выполнены безупречно!</b> 🌟`;
   } else {
-    msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>\n`;
+    msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>
+`;
     mistakes.forEach((m) => {
-      msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"\n`;
+      msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"
+`;
     });
   }
 
   return msg;
 }
 
-// Отправка запроса в Telegram
 async function sendToTelegram() {
   const statusEl = $("#sendStatusMsg");
   const nameInp = $("#reportStudentName");
@@ -762,7 +974,6 @@ async function sendToTelegram() {
   }
 
   const chatId = getTelegramChatId();
-
   if (!chatId) {
     showStatusMsg(
       "err",
@@ -812,7 +1023,6 @@ async function sendToTelegram() {
   }
 }
 
-// Показ статуса отправки
 function showStatusMsg(type, text) {
   const el = $("#sendStatusMsg");
   if (!el) return;
@@ -820,7 +1030,6 @@ function showStatusMsg(type, text) {
   el.textContent = text;
 }
 
-// Скачивание текстового отчёта файлом (.txt)
 function downloadReport() {
   if (!appState.results) calculateResults();
   const rawText = buildTelegramMessage(appState.results).replace(/<[^>]+>/g, "");
@@ -836,11 +1045,10 @@ function downloadReport() {
 }
 
 /* ============================================================
- * 6. СОБЫТИЯ И КЛАВИАТУРА
+ * 8. СОБЫТИЯ, КЛАВИАТУРА И МОДАЛЬНЫЕ ОКНА
  * ============================================================ */
 
 function setupEvents() {
-  // Навигационные кнопки
   const prevBtn = $("#btnPrev");
   const nextBtn = $("#btnNext");
   const checkBtn = $("#btnCheck");
@@ -851,50 +1059,59 @@ function setupEvents() {
   if (checkBtn) checkBtn.addEventListener("click", checkCurrentSlide);
   if (restartBtn) restartBtn.addEventListener("click", () => loadVariant(appState.variantKey));
 
-  // Кнопка отправки в Telegram
   const sendBtn = $("#btnSendTelegram");
   if (sendBtn) sendBtn.addEventListener("click", sendToTelegram);
 
-  // Кнопка скачивания файла
   const dlBtn = $("#btnDownloadReport");
   if (dlBtn) dlBtn.addEventListener("click", downloadReport);
 
-  // Клавиатурные сокращения
+  // Горячие клавиши (Enter для проверки / перехода, стрелки)
   document.addEventListener("keydown", (e) => {
-    // Не перехватываем, если открыто модальное окно или фокус в текстовом поле
-    if (e.target.tagName === "INPUT" && e.key === "Enter") {
-      checkCurrentSlide();
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        checkCurrentSlide();
+      }
       return;
     }
-    if (e.target.tagName === "INPUT") return;
 
-    if (e.key === "ArrowRight") {
-      goToSlide(appState.currentSlide + 1);
-    } else if (e.key === "ArrowLeft") {
+    if (e.key === "ArrowLeft") {
       goToSlide(appState.currentSlide - 1);
+    } else if (e.key === "ArrowRight") {
+      goToSlide(appState.currentSlide + 1);
+    } else if (e.key === "Enter") {
+      checkCurrentSlide();
     }
   });
 }
 
-/* ============================================================
- * 7. МОДАЛЬНЫЕ ОКНА: ТЕОРИЯ И НАСТРОЙКИ TELEGRAM
- * ============================================================ */
+function getTelegramChatId() {
+  return localStorage.getItem("math6_tg_chat_id") || CONFIG.telegram.defaultChatId || "";
+}
 
-// Открытие теории к уроку
-function openTheoryModal(lessonNum) {
+function setTelegramChatId(chatId) {
+  localStorage.setItem("math6_tg_chat_id", chatId);
+}
+
+function getTelegramBotToken() {
+  return CONFIG.telegram.botToken || "";
+}
+
+function openTheoryModal(lessonKey) {
   const modal = $("#theoryModal");
   const content = $("#theoryContent");
   if (!modal || !content) return;
 
-  const data = THEORY_DATA[lessonNum];
-  if (!data) return;
+  const data = typeof THEORY !== "undefined" ? THEORY[lessonKey] : null;
+  if (!data) {
+    content.innerHTML = "<p>Краткая теория для этого урока скоро появится.</p>";
+    modal.classList.add("open");
+    return;
+  }
 
   let html = `
-    <h3 class="modal-title">📖 Урок ${lessonNum}. ${data.title}</h3>
-    <div style="font-size:13.5px; color:#8c7857; margin-bottom:12px;">
-      УМК: <b>${data.umk}</b> · <span class="badge badge-adv">${data.badge}</span>
-    </div>
-    <div style="margin-bottom:14px;">
+    <h3 class="modal-title">📖 Теория: ${formatMath(data.title)}</h3>
+    <div class="theory-rules">
   `;
 
   data.rules.forEach((rule) => {
@@ -919,7 +1136,6 @@ function closeTheoryModal() {
   if (modal) modal.classList.remove("open");
 }
 
-// Открытие окна настроек Telegram
 function openTelegramSettingsModal() {
   const modal = $("#settingsModal");
   if (!modal) return;
@@ -936,7 +1152,6 @@ function closeTelegramSettingsModal() {
   if (modal) modal.classList.remove("open");
 }
 
-// Сохранение Chat ID
 function saveTelegramSettings() {
   const input = $("#settingChatId");
   const msgEl = $("#settingStatusMsg");
@@ -954,7 +1169,6 @@ function saveTelegramSettings() {
   }
 }
 
-// Тестовая отправка сообщения из настроек
 async function testTelegramPing() {
   const input = $("#settingChatId");
   const msgEl = $("#settingStatusMsg");
@@ -989,7 +1203,9 @@ async function testTelegramPing() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: `🔔 <b>Тестовое подключение успешно!</b>\n\nТренажёр по математике (6 класс) подключён к Telegram-боту @${CONFIG.telegram.botUsername}. Отчёты учеников будут приходить в этот чат! 🎉`,
+        text: `🔔 <b>Тестовое подключение успешно!</b>
+
+Тренажёр по математике подключён к Telegram-боту @${CONFIG.telegram.botUsername}. Отчёты учеников будут приходить в этот чат! 🎉`,
         parse_mode: "HTML",
       }),
     });

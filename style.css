@@ -1030,3 +1030,219 @@ body {
     justify-content: center;
   }
 }
+
+/* ============================================================
+ * ТАЙМЕР: ПАУЗА, ВЫБОР ДЛИТЕЛЬНОСТИ И РАЗБОР ОШИБОК
+ * ============================================================ */
+
+.timer-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timer-select {
+  background: #ffffff;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13.5px;
+  color: #2d3748;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+.timer-select:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.25);
+}
+
+.btn-timer-pause {
+  background: #edf2f7;
+  border: 1px solid #cbd5e0;
+  color: #2d3748;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-timer-pause:hover {
+  background: #e2e8f0;
+}
+.btn-timer-pause.paused {
+  background: #feebc8;
+  border-color: #dd6b20;
+  color: #c05621;
+}
+
+.pause-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(254, 252, 246, 0.96);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  border-radius: 12px;
+}
+.pause-overlay h3 {
+  font-size: 24px;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+.pause-overlay p {
+  font-size: 16px;
+  color: #4a5568;
+  margin-bottom: 18px;
+  max-width: 440px;
+}
+
+/* Разбор ошибок и пояснения решений */
+.review-card-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+.review-card-item.is-correct {
+  border-left: 4px solid #38a169;
+}
+.review-card-item.is-incorrect {
+  border-left: 4px solid #e53e3e;
+  background: #fffafa;
+}
+
+.review-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.review-item-title {
+  font-weight: 700;
+  font-size: 15.5px;
+  color: #2d3748;
+}
+.review-item-answers {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 14.5px;
+  margin: 6px 0;
+}
+.review-user-ans {
+  color: #4a5568;
+}
+.review-user-ans.bad {
+  color: #c53030;
+  font-weight: 600;
+}
+.review-user-ans.good {
+  color: #276749;
+  font-weight: 600;
+}
+.review-correct-ans {
+  color: #2f855a;
+  font-weight: 700;
+}
+
+.explanation-details {
+  margin-top: 8px;
+  background: #f7fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+.explanation-details[open] {
+  background: #fffff0;
+  border-color: #fbd38d;
+}
+.explanation-summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #b7791f;
+  outline: none;
+}
+.explanation-summary:hover {
+  color: #975a16;
+}
+.explanation-body {
+  margin-top: 8px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #2d3748;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 8px;
+}
+
+/* Бейджи уровней сложности и учебников */
+.level-badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.level-base {
+  background: #def7ec;
+  color: #03543f;
+}
+.level-medium {
+  background: #e1effe;
+  color: #1e429f;
+}
+.level-hard {
+  background: #fdf2f8;
+  color: #99154b;
+}
+
+.source-badge {
+  display: inline-block;
+  font-size: 12px;
+  color: #718096;
+  background: #edf2f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.btn-new-variant {
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(49, 130, 206, 0.35);
+}
+.btn-new-variant:hover {
+  background: linear-gradient(135deg, #3182ce, #2b6cb0);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(49, 130, 206, 0.45);
+}

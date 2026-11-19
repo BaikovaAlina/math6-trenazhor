@@ -40,44 +40,276 @@
 
     <!-- Панель фильтров по уровням -->
     <div class="filter-bar">
-      <button class="filter-btn active" onclick="filterLessons('all', this)">Все уроки (1–32)</button>
-      <button class="filter-btn" onclick="filterLessons('vpr', this)">⏱️ Пробные ВПР на время (60 мин)</button>
-      <button class="filter-btn" onclick="filterLessons('ch1', this)">Глава I: Обыкновенные дроби (Виленкин Ч.1)</button>
-      <button class="filter-btn" onclick="filterLessons('ch2', this)">Глава II: Рациональные числа (Виленкин Ч.2)</button>
+      <button class="filter-btn active" onclick="filterLessons('all', this)">Все материалы</button>
+      <button class="filter-btn" onclick="filterLessons('vpr', this)">🎯 Пробные ВПР (6 и 7 классы)</button>
+      <button class="filter-btn" onclick="filterLessons('bank6', this)">📖 Банк задач 6 класса (11 тем)</button>
+      <button class="filter-btn" onclick="filterLessons('ch1', this)">Глава I: Дроби (Виленкин Ч.1)</button>
+      <button class="filter-btn" onclick="filterLessons('ch2', this)">Глава II: Рац. числа (Виленкин Ч.2)</button>
       <button class="filter-btn" onclick="filterLessons('practicum', this)">Практикум & Олимпиады</button>
       <button class="filter-btn" onclick="filterLessons('adv', this)">Углублённый курс</button>
     </div>
 
     <!-- Блок пробных ВПР на время (60 минут) -->
+    <!-- Блок пробных ВПР на время (6 и 7 классы) -->
     <section class="vpr-section-banner" id="vprSection">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         <div>
           <span class="badge" style="background:#c53030; color:white; font-size:12.5px; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">ФИОКО · Экзаменационный режим</span>
-          <h2 style="margin:6px 0 4px; font-size:22px; color:#1a202c;">⏱️ Пробные ВПР по математике (6 класс) на время</h2>
-          <p style="margin:0; font-size:14.5px; color:#4a5568;">Реальные тренировочные варианты по 13 заданий на 60 минут с таймером обратного отсчёта, официальной шкалой оценки ФИОКО и моментальной доставкой отчёта учителю в Telegram.</p>
+          <h2 style="margin:6px 0 4px; font-size:22px; color:#1a202c;">🎯 Пробные ВПР по математике (6 и 7 классы)</h2>
+          <p style="margin:0; font-size:14.5px; color:#4a5568;">
+            Полноценные варианты по официальной спецификации ФИОКО с обратным отсчётом времени, официальной шкалой оценки, подробным разбором ошибок и возможностью генерации новых вариантов из банка задач.
+          </p>
         </div>
       </div>
 
-      <div class="vpr-grid">
+      <!-- ВПР 6 класс -->
+      <div style="margin-top:20px;">
+        <h3 style="margin:0 0 10px; font-size:18px; color:#2c5282; display:flex; align-items:center; gap:8px;">
+          <span>📘 6 класс · 13 заданий на 60 минут</span>
+          <span style="font-size:13px; font-weight:normal; color:#4a5568;">(Шкала: 12–13: «5», 10–11: «4», 6–9: «3», 0–5: «2»)</span>
+        </h3>
+        <div class="vpr-grid">
+          <div class="vpr-card">
+            <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
+            <h3>ВПР 6 класс · Демоверсия ФИОКО</h3>
+            <p>Официальная демоверсия: отрицательные числа, дроби, текстовые задачи на части, десятичные вычисления, практические расчеты, диаграммы и геометрия.</p>
+            <a href="trainer.html?variant=VPR-6-1" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать вариант 1 ▶</a>
+          </div>
+
+          <div class="vpr-card">
+            <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
+            <h3>ВПР 6 класс · Тренировочный вариант</h3>
+            <p>Типовой экзаменационный вариант полного курса 6 класса: дроби, модули, координаты, совместная работа, задачи на движение и логические выводы.</p>
+            <a href="trainer.html?variant=VPR-6-2" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать вариант 2 ▶</a>
+          </div>
+
+          <div class="vpr-card" style="background:#f0fdf4; border-color:#86efac;">
+            <div class="vpr-card-badge" style="background:#dcfce7; color:#15803d;">🎲 Генератор вариантов</div>
+            <h3>ВПР 6 класс · Случайный вариант</h3>
+            <p>Динамически собирает уникальный экзаменационный вариант из банка задач по структуре спецификации ФИОКО. Всегда новые задания!</p>
+            <a href="trainer.html?variant=GEN-VPR-6" class="btn-new-variant" style="width:100%; justify-content:center; box-sizing:border-box;">🎲 Сгенерировать и начать</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ВПР 7 класс -->
+      <div style="margin-top:28px;">
+        <h3 style="margin:0 0 10px; font-size:18px; color:#744210; display:flex; align-items:center; gap:8px;">
+          <span>📙 7 класс · 16 заданий на 90 минут</span>
+          <span style="font-size:13px; font-weight:normal; color:#4a5568;">(Шкала: 15–16: «5», 12–14: «4», 7–11: «3», 0–6: «2»)</span>
+        </h3>
+        <div class="vpr-grid">
+          <div class="vpr-card">
+            <div class="vpr-card-badge" style="background:#fefcbf; color:#744210;">⏱️ 90 минут · 16 заданий</div>
+            <h3>ВПР 7 класс · Демоверсия ФИОКО</h3>
+            <p>Спецификация 7 класса: степени, линейные функции, формулы сокращённого умножения, геометрия треугольников, смежные углы и вероятность.</p>
+            <a href="trainer.html?variant=VPR-7-1" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать вариант 1 ▶</a>
+          </div>
+
+          <div class="vpr-card">
+            <div class="vpr-card-badge" style="background:#fefcbf; color:#744210;">⏱️ 90 минут · 16 заданий</div>
+            <h3>ВПР 7 класс · Тренировочный вариант</h3>
+            <p>Комплексный тренинг: разность квадратов, свойства степеней, статистика, задачи на движение, углы в прямоугольном треугольнике и делимость.</p>
+            <a href="trainer.html?variant=VPR-7-2" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать вариант 2 ▶</a>
+          </div>
+
+          <div class="vpr-card" style="background:#fefce8; border-color:#fde047;">
+            <div class="vpr-card-badge" style="background:#fef9c3; color:#854d0e;">🎲 Генератор вариантов</div>
+            <h3>ВПР 7 класс · Случайный вариант</h3>
+            <p>Случайная комбинация заданий по всем 16 типам ВПР 7 класса. Идеально для регулярной проверки готовности к итоговой аттестации.</p>
+            <a href="trainer.html?variant=GEN-VPR-7" class="btn-new-variant" style="background:linear-gradient(135deg, #d97706, #b45309); width:100%; justify-content:center; box-sizing:border-box;">🎲 Сгенерировать и начать</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Раздел: Тематический банк задач для 6 класса (11 тем) -->
+    <section class="vpr-section-banner" id="bank6Section" style="background:linear-gradient(135deg, #f0fdfa, #ccfbf1); border-color:#2dd4bf; margin-top:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span class="badge" style="background:#0f766e; color:white; font-size:12.5px; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Большой банк задач · 6 класс</span>
+          <h2 style="margin:6px 0 4px; font-size:22px; color:#115e59;">📖 Тематический банк задач по программе 6 класса</h2>
+          <p style="margin:0; font-size:14.5px; color:#134e4a;">
+            11 ключевых тем на основе учебников <b>Виленкина, Мерзляка и Никольского</b>. В каждой теме по 15 задач трёх уровней сложности (базовый, средний, повышенный) с подробными решениями и пояснениями при разборе ошибок.
+          </p>
+        </div>
+      </div>
+
+      <div class="vpr-grid" style="margin-top:20px;">
+        <!-- Тема 1 -->
         <div class="vpr-card">
-          <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
-          <h3>ВПР Вариант 1 · Демоверсия ФИОКО</h3>
-          <p>Официальная демоверсия: отрицательные числа, дроби, текстовые задачи на части, десятичные вычисления, практические расчеты, диаграммы и геометрия.</p>
-          <a href="trainer.html?variant=VPR-1" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать ВПР-1 ▶</a>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 1 · 15 задач</span>
+            <span class="source-badge">Виленкин · Мерзляк</span>
+          </div>
+          <h3>🔢 Делимость натуральных чисел</h3>
+          <p>Делители, кратные, простые и составные числа, признаки делимости на 2, 3, 5, 9 и 10, разложение на множители.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-1" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
         </div>
 
+        <!-- Тема 2 -->
         <div class="vpr-card">
-          <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
-          <h3>ВПР Вариант 2 · Основной вариант</h3>
-          <p>Типовой экзаменационный вариант полного курса 6 класса: дроби, модули, координаты, совместная работа, задачи на движение и логические выводы.</p>
-          <a href="trainer.html?variant=VPR-2" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать ВПР-2 ▶</a>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 2 · 15 задач</span>
+            <span class="source-badge">Виленкин · Никольский</span>
+          </div>
+          <h3>🎯 НОД и НОК чисел</h3>
+          <p>Наибольший общий делитель, наименьшее общее кратное, взаимно простые числа, текстовые прикладные задачи.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-2" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
         </div>
 
+        <!-- Тема 3 -->
         <div class="vpr-card">
-          <div class="vpr-card-badge">⏱️ 60 минут · 13 заданий</div>
-          <h3>ВПР Вариант 3 · Повышенная сложность</h3>
-          <p>Углублённые задания для сильных учеников: сплавы и смеси, оптимизация тарифов, уравнения с модулями, объёмы тел и метод Гаусса.</p>
-          <a href="trainer.html?variant=VPR-3" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Начать ВПР-3 ▶</a>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 3 · 15 задач</span>
+            <span class="source-badge">Виленкин · Мерзляк</span>
+          </div>
+          <h3>🍰 Обыкновенные дроби</h3>
+          <p>Правильные и неправильные дроби, сокращение дробей, приведение к общему знаменателю, сложение, вычитание, умножение и деление.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-3" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 4 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 4 · 15 задач</span>
+            <span class="source-badge">Мерзляк · Никольский</span>
+          </div>
+          <h3>🥞 Смешанные числа</h3>
+          <p>Выделение целой части, перевод в неправильную дробь, арифметические действия со смешанными числами и уравнения.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-4" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 5 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 5 · 15 задач</span>
+            <span class="source-badge">Виленкин · Никольский</span>
+          </div>
+          <h3>📏 Десятичные дроби</h3>
+          <p>Сложение, вычитание, умножение и деление десятичных дробей, перевод обыкновенных дробей в десятичные и обратно.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-5" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 6 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 6 · 15 задач</span>
+            <span class="source-badge">Виленкин · Мерзляк</span>
+          </div>
+          <h3>📊 Проценты и реальная математика</h3>
+          <p>Нахождение процента от числа, числа по его проценту, процентное отношение, скидки, наценки и банковские вклады.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-6" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 7 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 7 · 15 задач</span>
+            <span class="source-badge">Виленкин · Мерзляк</span>
+          </div>
+          <h3>⚖️ Отношения и пропорции</h3>
+          <p>Основное свойство пропорции, прямая и обратная пропорциональная зависимость, масштаб карт и чертежей.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-7" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 8 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 8 · 15 задач</span>
+            <span class="source-badge">Виленкин · Никольский</span>
+          </div>
+          <h3>⭕ Окружность и круг</h3>
+          <p>Длина окружности ($C = 2\pi r$), площадь круга ($S = \pi r^2$), радиус, диаметр, число $\pi pprox 3{,}14$.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-8" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 9 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 9 · 15 задач</span>
+            <span class="source-badge">Виленкин · Мерзляк</span>
+          </div>
+          <h3>🌡️ Рациональные числа</h3>
+          <p>Координатная прямая, противоположные числа, модуль числа, сравнение чисел, 4 действия с отрицательными числами.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-9" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 10 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 10 · 15 задач</span>
+            <span class="source-badge">Виленкин · Мерзляк</span>
+          </div>
+          <h3>📐 Координатная плоскость</h3>
+          <p>Оси абсцисс и ординат, четверти плоскости, координаты точек $(x; y)$, построение отрезков, многоугольников и симметрия.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-10" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
+        </div>
+
+        <!-- Тема 11 -->
+        <div class="vpr-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span class="vpr-card-badge" style="background:#ccfbf1; color:#0f766e;">Тема 11 · 15 задач</span>
+            <span class="source-badge">Виленкин · Мерзляк</span>
+          </div>
+          <h3>🧩 Линейные уравнения</h3>
+          <p>Перенос слагаемых, приведение подобных, уравнения со скобками, дробями и текстовые задачи, решаемые уравнением.</p>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <span class="level-badge level-base">Базовый (5)</span>
+            <span class="level-badge level-medium">Средний (5)</span>
+            <span class="level-badge level-hard">Сложный (5)</span>
+          </div>
+          <a href="trainer.html?variant=T6-11" class="btn-hero" style="width:100%; text-align:center; box-sizing:border-box;">Решать тему ▶</a>
         </div>
       </div>
     </section>
@@ -770,17 +1002,87 @@
   <script>
     // Фильтрация карточек по уровню
     function filterLessons(type, btn) {
-      $$(".filter-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
 
-      const banners = $$(".chapter-banner");
-      const modules = $$(".module-block");
-      const vprSec = $("#vprSection");
+      const vprSec = document.getElementById("vprSection");
+      const bank6Sec = document.getElementById("bank6Section");
+      const modules = Array.from(document.querySelectorAll(".module-section"));
+      const banners = Array.from(document.querySelectorAll(".chapter-banner"));
 
       if (type === "vpr") {
         if (vprSec) {
           vprSec.style.display = "block";
           vprSec.scrollIntoView({ behavior: "smooth" });
+        }
+        if (bank6Sec) bank6Sec.style.display = "none";
+        modules.forEach(m => m.style.display = "none");
+        banners.forEach(b => b.style.display = "none");
+        return;
+      }
+
+      if (type === "bank6") {
+        if (vprSec) vprSec.style.display = "none";
+        if (bank6Sec) {
+          bank6Sec.style.display = "block";
+          bank6Sec.scrollIntoView({ behavior: "smooth" });
+        }
+        modules.forEach(m => m.style.display = "none");
+        banners.forEach(b => b.style.display = "none");
+        return;
+      }
+
+      if (vprSec) vprSec.style.display = (type === "all" || type === "practicum") ? "block" : "none";
+      if (bank6Sec) bank6Sec.style.display = (type === "all") ? "block" : "none";
+
+      modules.forEach(mod => {
+        const modChapter = mod.dataset.chapter;
+        const modCards = Array.from(mod.querySelectorAll(".lesson-card"));
+
+        if (type === "all") {
+          mod.style.display = "block";
+          modCards.forEach(c => c.style.display = "flex");
+        } else if (type === "ch1" || type === "ch2" || type === "practicum") {
+          if (modChapter === type) {
+            mod.style.display = "block";
+            modCards.forEach(c => c.style.display = "flex");
+          } else {
+            mod.style.display = "none";
+          }
+        } else if (type === "adv") {
+          let visibleCount = 0;
+          modCards.forEach(c => {
+            const lvl = c.dataset.level;
+            if (lvl === "adv" || lvl === "oly") {
+              c.style.display = "flex";
+              visibleCount++;
+            } else {
+              c.style.display = "none";
+            }
+          });
+          mod.style.display = visibleCount > 0 ? "block" : "none";
+        }
+      });
+
+      // Отображение баннеров глав
+      if (type === "all") {
+        banners.forEach(b => b.style.display = "block");
+      } else if (type === "ch1") {
+        banners[0].style.display = "block";
+        if (banners[1]) banners[1].style.display = "none";
+        if (banners[2]) banners[2].style.display = "none";
+      } else if (type === "ch2") {
+        if (banners[0]) banners[0].style.display = "none";
+        if (banners[1]) banners[1].style.display = "block";
+        if (banners[2]) banners[2].style.display = "none";
+      } else if (type === "practicum") {
+        if (banners[0]) banners[0].style.display = "none";
+        if (banners[1]) banners[1].style.display = "none";
+        if (banners[2]) banners[2].style.display = "block";
+      } else {
+        banners.forEach(b => b.style.display = "none");
+      }
+    });
         }
         modules.forEach(m => m.style.display = "none");
         banners.forEach(b => b.style.display = "none");

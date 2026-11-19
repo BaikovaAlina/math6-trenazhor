@@ -18,9 +18,21 @@
     <header class="site-header">
       <div class="top-bar">
         <a href="index.html">← Ко всем урокам</a>
-        <div style="display:flex; gap:12px; align-items:center;">
-          <div class="vpr-timer-container" id="vprTimerContainer" style="display:none;">
-            <span class="vpr-timer-badge" id="vprTimerBadge">⏱️ 60:00 (из 60 мин)</span>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <div class="timer-controls-group" id="timerControlsGroup">
+            <select id="timerDurationSelect" class="timer-select" title="Настройка таймера">
+              <option value="auto">⏱️ Авто</option>
+              <option value="none">Без таймера</option>
+              <option value="15">15 мин</option>
+              <option value="30">30 мин</option>
+              <option value="45">45 мин</option>
+              <option value="60">60 мин</option>
+              <option value="90">90 мин</option>
+            </select>
+            <div class="vpr-timer-container" id="vprTimerContainer" style="display:none;">
+              <span class="vpr-timer-badge" id="vprTimerBadge">⏱️ 60:00</span>
+              <button type="button" class="btn-timer-pause" id="btnTimerPause" title="Пауза / Продолжить">⏸️ Пауза</button>
+            </div>
           </div>
           <button class="btn-settings" onclick="openTelegramSettingsModal()">⚙️ Настройки Telegram</button>
         </div>
@@ -39,10 +51,28 @@
 
           <label style="font-size:13.5px; color:#6d593c; font-weight:bold; margin-top:4px;">Выбрать работу:</label>
           <select id="variantSelect" class="student-name-input" style="font-size:14.5px; padding:6px 8px; cursor:pointer;">
-            <optgroup label="⏱️ Пробные ВПР по математике (на время · 60 мин)">
-              <option value="VPR-1">⏱️ ВПР Вариант 1 (Демоверсия ФИОКО · 60 мин)</option>
-              <option value="VPR-2">⏱️ ВПР Вариант 2 (Основной тренировочный · 60 мин)</option>
-              <option value="VPR-3">⏱️ ВПР Вариант 3 (Повышенная сложность · 60 мин)</option>
+            <optgroup label="⏱️ Пробные ВПР по математике · 6 класс (13 заданий · 60 мин)">
+              <option value="VPR-6-1">ВПР 6 класс · Вариант 1 (Демоверсия ФИОКО)</option>
+              <option value="VPR-6-2">ВПР 6 класс · Вариант 2 (Тренировочный)</option>
+              <option value="GEN-VPR-6">🎲 ВПР 6 класс · Сгенерировать новый вариант</option>
+            </optgroup>
+            <optgroup label="⏱️ Пробные ВПР по математике · 7 класс (16 заданий · 90 мин)">
+              <option value="VPR-7-1">ВПР 7 класс · Вариант 1 (Демоверсия ФИОКО)</option>
+              <option value="VPR-7-2">ВПР 7 класс · Вариант 2 (Тренировочный)</option>
+              <option value="GEN-VPR-7">🎲 ВПР 7 класс · Сгенерировать новый вариант</option>
+            </optgroup>
+            <optgroup label="📖 Банк задач 6 класса (11 ключевых тем)">
+              <option value="T6-1">Тема 1 · Делимость чисел (15 задач · Базовый/Средний/Сложный)</option>
+              <option value="T6-2">Тема 2 · НОД и НОК (15 задач)</option>
+              <option value="T6-3">Тема 3 · Обыкновенные дроби (15 задач)</option>
+              <option value="T6-4">Тема 4 · Смешанные числа (15 задач)</option>
+              <option value="T6-5">Тема 5 · Десятичные дроби (15 задач)</option>
+              <option value="T6-6">Тема 6 · Проценты (15 задач)</option>
+              <option value="T6-7">Тема 7 · Отношения и пропорции (15 задач)</option>
+              <option value="T6-8">Тема 8 · Окружность и круг (15 задач)</option>
+              <option value="T6-9">Тема 9 · Рациональные числа (15 задач)</option>
+              <option value="T6-10">Тема 10 · Координатная плоскость (15 задач)</option>
+              <option value="T6-11">Тема 11 · Уравнения (15 задач)</option>
             </optgroup>
             <optgroup label="Глава I: Делимость чисел (Виленкин § 1–6)">
               <option value="K-1">Урок 1 · К-1 (Классная) — Делители и кратные (§ 1, 4)</option>
@@ -197,6 +227,8 @@
   <script src="config.js"></script>
   <script src="theory.js"></script>
   <script src="tasks.js"></script>
+  <script src="tasks6.js"></script>
+  <script src="variants_vpr.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

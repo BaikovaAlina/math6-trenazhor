@@ -8709,3 +8709,10 @@ const TASKS = {
     ]
   }
 };
+
+if (typeof window !== "undefined") {
+  window.TASKS = TASKS;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { TASKS };
+}
