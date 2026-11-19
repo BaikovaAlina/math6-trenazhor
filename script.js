@@ -1298,12 +1298,6 @@ function closeTheoryModal() {
   if (modal) modal.classList.remove("open");
 }
 
-// Заглушки для удалённых настроек Telegram
-function openTelegramSettingsModal() {}
-function closeTelegramSettingsModal() {}
-function saveTelegramSettings() {}
-function testTelegramPing() {}
-
 // Экспорт для Node.js окружения
 if (typeof window !== "undefined") {
   window.appState = appState;
@@ -1317,10 +1311,6 @@ if (typeof window !== "undefined") {
   window.getTelegramChatId = getTelegramChatId;
   window.setTelegramChatId = setTelegramChatId;
   window.getTelegramBotToken = getTelegramBotToken;
-  window.openTelegramSettingsModal = openTelegramSettingsModal;
-  window.closeTelegramSettingsModal = closeTelegramSettingsModal;
-  window.saveTelegramSettings = saveTelegramSettings;
-  window.testTelegramPing = testTelegramPing;
   window.openTheoryModal = openTheoryModal;
   window.closeTheoryModal = closeTheoryModal;
   window.buildTelegramMessage = buildTelegramMessage;
@@ -1339,10 +1329,6 @@ if (typeof module !== "undefined" && module.exports) {
     getTelegramChatId,
     setTelegramChatId,
     getTelegramBotToken,
-    openTelegramSettingsModal,
-    closeTelegramSettingsModal,
-    saveTelegramSettings,
-    testTelegramPing,
     openTheoryModal,
     closeTheoryModal,
     buildTelegramMessage,
