@@ -863,28 +863,30 @@ body {
  * ============================================================ */
 
 .task-ref {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0f7ff;
-  border: 1px solid #cce3ff;
-  color: #1e5ba8;
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: none !important;
+}
+
+.source-badge {
+  display: none !important;
 }
 
 .katex {
-  font-size: 1.18em;
+  font-size: 1.15em;
   text-rendering: geometricPrecision;
   color: inherit;
+  max-width: 100%;
 }
 
 .katex-html {
-  white-space: nowrap;
+  white-space: normal;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 4px 0;
+  margin: 0.5em 0;
 }
 
 .katex .frac-line {

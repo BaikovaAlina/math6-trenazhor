@@ -394,3 +394,13 @@ const THEORY_DATA = {
     sample: "Среди 27 монет одна фальшивая легче. За сколько взвешиваний на чашечных весах без гирь её можно найти? 27 = 3³, значит за 3 взвешивания."
   }
 };
+
+const THEORY = THEORY_DATA;
+
+if (typeof window !== "undefined") {
+  window.THEORY = THEORY_DATA;
+  window.THEORY_DATA = THEORY_DATA;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { THEORY: THEORY_DATA, THEORY_DATA };
+}

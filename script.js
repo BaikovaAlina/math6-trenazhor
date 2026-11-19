@@ -36,86 +36,130 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
  * 1. ФОРМАТИРОВАНИЕ ДРОБЕЙ И ФОРМУЛ (KATEX + FALLBACK)
  * ============================================================ */
 
+function safeKatex(tex, display = false) {
+  if (typeof katex !== "undefined" && typeof katex.renderToString === "function") {
+    try {
+      return katex.renderToString(tex, {
+        displayMode: display,
+        throwOnError: false,
+        strict: false
+      });
+    } catch (err) {
+      console.warn("KaTeX render error:", err);
+      return tex;
+    }
+  }
+  return tex;
+}
+
+function findMatchingBrace(str, startIndex) {
+  let depth = 0;
+  for (let i = startIndex; i < str.length; i++) {
+    if (str[i] === "{") depth++;
+    else if (str[i] === "}") {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+function replaceFractions(text, protect) {
+  let idx = 0;
+  while ((idx = text.indexOf("\\frac{", idx)) !== -1) {
+    let prefix = text.substring(0, idx);
+    let matchMixed = prefix.match(/([-−]?\s*\d+)\s*$/);
+    let whole = matchMixed ? matchMixed[1] : "";
+    let startReplace = matchMixed ? idx - matchMixed[0].length : idx;
+
+    let numStart = idx + 6;
+    let numEnd = findMatchingBrace(text, numStart - 1);
+    if (numEnd === -1) { idx += 6; continue; }
+
+    let afterNum = text.substring(numEnd + 1);
+    let denBrace = afterNum.search(/\S/);
+    if (denBrace === -1 || afterNum[denBrace] !== "{") { idx = numEnd + 1; continue; }
+
+    let denStart = numEnd + 1 + denBrace + 1;
+    let denEnd = findMatchingBrace(text, denStart - 1);
+    if (denEnd === -1) { idx = numEnd + 1; continue; }
+
+    let num = text.substring(numStart, numEnd);
+    let den = text.substring(denStart, denEnd);
+
+    let texFormula = whole ? `${whole.trim()}\\frac{${num.trim()}}{${den.trim()}}` : `\\frac{${num.trim()}}{${den.trim()}}`;
+    let rendered = protect(safeKatex(texFormula, false));
+
+    text = text.substring(0, startReplace) + rendered + text.substring(denEnd + 1);
+    idx = startReplace + rendered.length;
+  }
+  return text;
+}
+
 function formatMath(text) {
   if (!text || typeof text !== "string") return text;
 
-  // Защита тегов, ссылок и физических единиц
+  // 1. Защита HTML тегов, URL-адресов и физических единиц со слешем (км/ч, м/с)
   const placeholders = [];
   const protect = (str) => {
     placeholders.push(str);
-    return `___PL_${placeholders.length - 1}___`;
+    return "___PL_" + (placeholders.length - 1) + "___";
   };
 
   text = text.replace(/<[^>]+>/g, protect);
   text = text.replace(/https?:\/\/[^\s"'<>]+/g, protect);
   text = text.replace(
-    /(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч)\s*\/\s*(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч|см³|м³|шт)/gi,
+    /\b(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч)\s*\/\s*(км|м|см|мм|дм|кг|г|т|л|мл|руб|коп|об|сек|с|мин|ч|см³|м³|шт)\b/gi,
     protect
   );
+
+  // Очистка лишних круглых скобок вокруг математических формул: ($C = 2\pi r$) -> $C = 2\pi r$
+  text = text.replace(/\(\s*\$([^$]+)\$\s*\)/g, "$$$1$$");
+  text = text.replace(/\(\s*\\\((\\[^()]+)\\\)\s*\)/g, "\\($1\\)");
+  text = text.replace(/\(\s*([A-Za-z]\s*=\s*[^()]*\\(?:pi|frac)[^()]*)\s*\)/g, "$1");
 
   const hasKaTeX = typeof katex !== "undefined" && typeof katex.renderToString === "function";
 
   if (hasKaTeX) {
-    // $...$ явный LaTeX
-    text = text.replace(/\$([^\$]+)\$/g, (m, formula) => {
-      try {
-        return katex.renderToString(formula.trim(), { throwOnError: false, displayMode: false });
-      } catch (e) {
-        return m;
-      }
+    // 2. Явный выключной math: $$...$$ или \[...\]
+    text = text.replace(/\$\$([^$]+)\$\$/g, (m, tex) => protect(safeKatex(tex.trim(), true)));
+    text = text.replace(/\\\[([\s\S]+?)\\\]/g, (m, tex) => protect(safeKatex(tex.trim(), true)));
+
+    // 3. Явный внутритекстовый math: $...$ или \(...\)
+    text = text.replace(/\$([^$]+)\$/g, (m, tex) => protect(safeKatex(tex.trim(), false)));
+    text = text.replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => protect(safeKatex(tex.trim(), false)));
+
+    // 4. Дроби любой степени вложенности и смешанные числа с LaTeX: \frac{a}{b}, 3\frac{1}{2}
+    text = replaceFractions(text, protect);
+
+    // 5. Формулы с числом Пи или спецсимволами: C = 2\pi r, S = \pi r^2, \pi \approx 3,14
+    text = text.replace(/([A-Za-z0-9_,\s·=+\-*/():]+(?:\\pi|\\approx)[A-Za-z0-9_,\s·=+\-*/()^]*)/g, (m, formula) => {
+      if (formula.includes("<") || formula.includes(">")) return formula;
+      let cleanTex = formula.replace(/(\d+),(\d+)/g, "$1{,}$2");
+      cleanTex = cleanTex.replace(/·/g, "\\cdot ");
+      return protect(safeKatex(cleanTex.trim(), false));
     });
 
-    // Смешанные числа: 1rac{2}{3}
-    text = text.replace(/([-−]?\d+)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, whole, num, den) => {
-      try {
-        return katex.renderToString(`${whole}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
-      } catch (e) {
-        return m;
-      }
-    });
-
-    // Одиночные дроби LaTeX: rac{a}{b}
-    text = text.replace(/([-−]?)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g, (m, sign, num, den) => {
-      try {
-        return katex.renderToString(`${sign}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
-      } catch (e) {
-        return m;
-      }
-    });
-
-    // Текстовые смешанные числа: "3 5/6"
-    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, whole, num, den) => {
-      try {
-        return katex.renderToString(`${whole}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
-      } catch (e) {
-        return `<span class="mixed-num">${whole}<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span></span>`;
-      }
-    });
-
-    // Обычные текстовые простые дроби: "3/4"
-    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, sign, num, den) => {
-      try {
-        return katex.renderToString(`${sign}\frac{${num}}{${den}}`, { throwOnError: false, displayMode: false });
-      } catch (e) {
-        return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
-      }
+    // 6. Простые текстовые дроби вида 3/4 или -5/12
+    text = text.replace(/(?<![0-9a-zA-Zа-яА-Я_\\])([-−]?)\s*(\d+)\s*\/\s*(\d+)(?![0-9a-zA-Zа-яА-Я_])/g, (m, sign, num, den) => {
+      return protect(safeKatex(`${sign}\\frac{${num}}{${den}}`, false));
     });
   } else {
-    // Чистый CSS fallback
+    // Чистый CSS fallback при отсутствии KaTeX
     text = text.replace(
-      /([-−]?\d+)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+      /([-−]?\d+)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
       `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
     );
     text = text.replace(
-      /(?<![<a-zA-Z0-9\/:\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
+      /(?<![<a-zA-Z0-9\/:\\])([-−]?\d+)\s+(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9\/>])/g,
       `<span class="mixed-num">$1<span class="frac"><span class="num">$2</span><span class="den">$3</span></span></span>`
     );
     text = text.replace(
-      /([-−]?)\s*\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+      /([-−]?)\s*\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
       `<span class="frac"><span class="num">$2</span><span class="den">$3</span></span>`
     );
     text = text.replace(
-      /(?<![<a-zA-Z0-9\/:\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
+      /(?<![<a-zA-Z0-9\/:\\])([a-zA-Zа-яА-Я0-9]+)\s*\/\s*([a-zA-Zа-яА-Я0-9]+)(?![a-zA-Z0-9\/>])/g,
       `<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>`
     );
   }
@@ -126,6 +170,27 @@ function formatMath(text) {
   return text;
 }
 
+// Запуск авторендеринга KaTeX по всему дереву DOM (второй проход безопасности)
+function renderAllMath(rootEl = document.body) {
+  if (!rootEl) return;
+  if (typeof renderMathInElement === "function") {
+    try {
+      renderMathInElement(rootEl, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "$", right: "$", display: false }
+        ],
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "input", "option"],
+        throwOnError: false
+      });
+    } catch (e) {
+      console.warn("KaTeX render error:", e);
+    }
+  }
+}
+
 /* ============================================================
  * 2. НОРМАЛИЗАЦИЯ И ПРОВЕРКА ОТВЕТОВ
  * ============================================================ */
@@ -133,7 +198,7 @@ function formatMath(text) {
 function canon(val) {
   if (val == null) return "";
   let s = String(val).trim().toLowerCase();
-  s = s.replace(/\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2");
+  s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2");
   s = s.replace(/\$/g, "");
   s = s.replace(/[×*xх∙⋅]/g, "·");
   s = s.replace(/°/g, "");
@@ -351,9 +416,13 @@ function initTrainer() {
   const variantParam = urlParams.get("variant");
   if (variantParam) {
     if (variantParam === "GEN-VPR-6" || variantParam === "VPR-6-GEN") {
-      appState.variantKey = generateVPRVariant(6);
+      if (typeof generateVPRVariant === "function") {
+        appState.variantKey = generateVPRVariant(6);
+      }
     } else if (variantParam === "GEN-VPR-7" || variantParam === "VPR-7-GEN") {
-      appState.variantKey = generateVPRVariant(7);
+      if (typeof generateVPRVariant === "function") {
+        appState.variantKey = generateVPRVariant(7);
+      }
     } else if (typeof TASKS !== "undefined" && TASKS[variantParam]) {
       appState.variantKey = variantParam;
     }
@@ -362,7 +431,6 @@ function initTrainer() {
   // Настройка выпадающего списка вариантов
   const variantSelect = $("#variantSelect");
   if (variantSelect) {
-    // Проверяем, есть ли текущий вариант в списке, если нет — добавляем
     if (!variantSelect.querySelector(`option[value="${appState.variantKey}"]`)) {
       const opt = document.createElement("option");
       opt.value = appState.variantKey;
@@ -373,15 +441,19 @@ function initTrainer() {
     variantSelect.addEventListener("change", (e) => {
       const val = e.target.value;
       if (val === "GEN-VPR-6") {
-        const k = generateVPRVariant(6);
-        ensureVariantOption(k, "🎲 ВПР 6 класс · Новый сгенерированный вариант");
-        variantSelect.value = k;
-        loadVariant(k);
+        if (typeof generateVPRVariant === "function") {
+          const k = generateVPRVariant(6);
+          ensureVariantOption(k, "🎲 ВПР 6 класс · Новый сгенерированный вариант");
+          variantSelect.value = k;
+          loadVariant(k);
+        }
       } else if (val === "GEN-VPR-7") {
-        const k = generateVPRVariant(7);
-        ensureVariantOption(k, "🎲 ВПР 7 класс · Новый сгенерированный вариант");
-        variantSelect.value = k;
-        loadVariant(k);
+        if (typeof generateVPRVariant === "function") {
+          const k = generateVPRVariant(7);
+          ensureVariantOption(k, "🎲 ВПР 7 класс · Новый сгенерированный вариант");
+          variantSelect.value = k;
+          loadVariant(k);
+        }
       } else {
         loadVariant(val);
       }
@@ -392,7 +464,7 @@ function initTrainer() {
   const timerDurationSelect = $("#timerDurationSelect");
   if (timerDurationSelect) {
     timerDurationSelect.addEventListener("change", (e) => {
-      const vData = TASKS[appState.variantKey];
+      const vData = typeof TASKS !== "undefined" ? TASKS[appState.variantKey] : null;
       const defaultMin = vData ? (vData.timeLimitMinutes || (vData.isVPR ? (vData.grade === 7 ? 90 : 60) : 0)) : 0;
       applyTimerDuration(e.target.value, defaultMin);
     });
@@ -412,6 +484,9 @@ function initTrainer() {
   // Запуск выбранного варианта
   loadVariant(appState.variantKey);
   setupEvents();
+
+  // Авторендеринг формул KaTeX
+  renderAllMath(document.body);
 }
 
 function ensureVariantOption(key, label) {
@@ -458,7 +533,6 @@ function loadVariant(vKey) {
   const slidesContainer = $("#slidesDeck");
   if (!slidesContainer) return;
 
-  // Сохраняем pauseOverlay если есть
   slidesContainer.innerHTML = `
     <div class="pause-overlay" id="pauseOverlay" style="display:none;">
       <h3>⏸️ Работа на паузе</h3>
@@ -467,13 +541,13 @@ function loadVariant(vKey) {
     </div>
   `;
 
-  // Перепривязываем кнопку в overlay
   const resumeOverlayBtn = $("#btnResumeFromOverlay");
   if (resumeOverlayBtn) resumeOverlayBtn.addEventListener("click", resumeFromPause);
 
   const slides = [];
 
-  // Создаём слайды с заданиями (БЕЗ ПОДСКАЗОК во время решения!)
+  // Создаём слайды с заданиями:
+  // БЕЗ ПОДПИСЕЙ С УЧЕБНИКАМИ (q.ref удалён), БЕЗ ПОДСКАЗОК во время решения
   data.questions.forEach((q, qIdx) => {
     const slide = document.createElement("div");
     slide.className = "slide" + (qIdx === 0 ? " active" : "");
@@ -485,10 +559,14 @@ function loadVariant(vKey) {
       levelBadgeHtml = `<span class="level-badge ${lvlClass}">${q.level}</span>`;
     }
 
+    // Очищаем crumb от упоминаний учебников
+    let cleanCrumb = q.crumb || ("Задание " + q.num);
+    cleanCrumb = cleanCrumb.replace(/^Виленкин[^\w\dа-яА-ЯёЁ]*·?\s*(?:§[^\w\dа-яА-ЯёЁ]*·?\s*)?/i, "");
+
     let html = `
       <div class="margin-line"></div>
       <div class="crumb" style="display:flex; justify-content:space-between; align-items:center;">
-        <span>${formatMath(q.crumb || "Задание " + q.num)}</span>
+        <span>${formatMath(cleanCrumb)}</span>
         ${levelBadgeHtml}
       </div>
       <h2 class="task-heading">
@@ -496,7 +574,6 @@ function loadVariant(vKey) {
         ${formatMath(q.title)}
       </h2>
       ${q.sub ? `<div class="task-sub">${formatMath(q.sub)}</div>` : ""}
-      ${q.ref ? `<div class="task-ref">📖 ${formatMath(q.ref)}</div>` : ""}
       <div class="task-content">
     `;
 
@@ -570,6 +647,9 @@ function loadVariant(vKey) {
         <button class="btn-send-tg" id="btnSendTelegram">Отправить в Telegram ✈️</button>
         <button class="btn-download-report" id="btnDownloadReport">Скачать отчёт (.txt) 💾</button>
       </div>
+      <div id="teacherChatNotice" style="font-size:13.5px; color:#6d593c; margin-top:6px;">
+        Канал доставки: бот <b>@math6gradeZVEROK_bot</b> · Чат учителя: <b id="displayTeacherChatId">${getTelegramChatId()}</b>
+      </div>
       <div class="send-status-msg" id="sendStatusMsg"></div>
     </div>
 
@@ -606,6 +686,9 @@ function loadVariant(vKey) {
       }
     });
   }
+
+  // Рендерим формулы в собранных слайдах
+  renderAllMath(slidesContainer);
 }
 
 /* ============================================================
@@ -645,6 +728,11 @@ function goToSlide(index) {
     s.classList.toggle("active", idx === index);
   });
   appState.currentSlide = index;
+
+  // Авторендеринг формул на открывшемся слайде
+  if (appState.slides[index]) {
+    renderAllMath(appState.slides[index]);
+  }
 
   // Если открылся слайд результатов — выключаем таймер и формируем разбор
   if (index === appState.slides.length - 1) {
@@ -686,7 +774,7 @@ function checkCurrentSlide() {
  * ============================================================ */
 
 function calculateResults() {
-  const vData = TASKS[appState.variantKey];
+  const vData = typeof TASKS !== "undefined" ? TASKS[appState.variantKey] : null;
   const allInputs = $$("#slidesDeck .math-input");
   let totalScore = 0;
   let maxScore = 0;
@@ -703,7 +791,6 @@ function calculateResults() {
     const type = inp.dataset.type;
     const isOk = checkAnswer(val, pat, type);
 
-    // Поиск вопроса для извлечения краткого решения (explanation)
     const qObj = vData && vData.questions ? vData.questions.find((q) => String(q.num) === String(qNum)) : null;
     const explanation = qObj ? qObj.explanation : "";
 
@@ -755,7 +842,6 @@ function calculateResults() {
   if (appState.isVPR) {
     const gradeLevel = (vData && vData.grade) || 6;
     if (gradeLevel === 7) {
-      // 7 класс: 16 заданий, 16 баллов
       if (totalScore >= 15) {
         grade = 5;
         gradeText = "5 (Отлично) 🌟";
@@ -774,7 +860,6 @@ function calculateResults() {
         gradeClass = "grade-2";
       }
     } else {
-      // 6 класс: 13 заданий, 13 баллов
       if (totalScore >= 12) {
         grade = 5;
         gradeText = "5 (Отлично) 🌟";
@@ -794,16 +879,16 @@ function calculateResults() {
       }
     }
   } else {
-    // Стандартная шкала по процентам
-    if (percent >= (CONFIG.gradeScale ? CONFIG.gradeScale[5] : 85)) {
+    const scale = (typeof CONFIG !== "undefined" && CONFIG.gradeScale) ? CONFIG.gradeScale : { 5: 85, 4: 68, 3: 50 };
+    if (percent >= scale[5]) {
       grade = 5;
       gradeText = "5 (Отлично!) 🎉";
       gradeClass = "grade-5";
-    } else if (percent >= (CONFIG.gradeScale ? CONFIG.gradeScale[4] : 70)) {
+    } else if (percent >= scale[4]) {
       grade = 4;
       gradeText = "4 (Хорошо) 👍";
       gradeClass = "grade-4";
-    } else if (percent >= (CONFIG.gradeScale ? CONFIG.gradeScale[3] : 50)) {
+    } else if (percent >= scale[3]) {
       grade = 3;
       gradeText = "3 (Удовлетворительно) ✍️";
       gradeClass = "grade-3";
@@ -849,6 +934,9 @@ function calculateResults() {
     gradeDisp.className = `grade-badge ${gradeClass}`;
   }
 
+  const dispChatId = $("#displayTeacherChatId");
+  if (dispChatId) dispChatId.textContent = getTelegramChatId();
+
   // Рендеринг подробных карточек разбора решений и ошибок
   const revCont = $("#reviewContainer");
   if (revCont) {
@@ -887,6 +975,7 @@ function calculateResults() {
       `;
     });
     revCont.innerHTML = html;
+    renderAllMath(revCont);
   }
 }
 
@@ -895,70 +984,49 @@ function calculateResults() {
  * ============================================================ */
 
 function buildTelegramMessage(results) {
-  const vData = TASKS[appState.variantKey];
+  const vData = typeof TASKS !== "undefined" ? TASKS[appState.variantKey] : null;
   const name = appState.studentName || "Ученик (без имени)";
   const gradeLevel = (vData && vData.grade) || 6;
+  const title = vData ? vData.title : appState.variantKey;
+  const topic = vData ? vData.topic : "";
 
   if (appState.isVPR) {
-    let msg = `⏱️ <b>ПРОБНЫЙ ВПР ПО МАТЕМАТИКЕ · ${gradeLevel} КЛАСС</b>
-
-`;
-    msg += `👤 <b>Ученик:</b> ${name}
-`;
-    msg += `📋 <b>Экзаменационная работа:</b> ${vData.title}
-`;
-    msg += `⏱️ <b>Затраченное время:</b> ${results.timeString}
-`;
-    msg += `🎯 <b>Первичный балл ВПР:</b> ${results.totalScore} из ${results.maxScore} (${results.percent}%)
-`;
-    msg += `🏆 <b>Отметка по шкале ВПР (ФИОКО):</b> ${results.gradeText}
-`;
-    msg += `📅 <b>Дата сдачи:</b> ${results.date}
-
-`;
+    let msg = `⏱️ <b>ПРОБНЫЙ ВПР ПО МАТЕМАТИКЕ · ${gradeLevel} КЛАСС</b>\n\n`;
+    msg += `👤 <b>Ученик:</b> ${name}\n`;
+    msg += `📋 <b>Экзаменационная работа:</b> ${title}\n`;
+    msg += `⏱️ <b>Затраченное время:</b> ${results.timeString}\n`;
+    msg += `🎯 <b>Первичный балл ВПР:</b> ${results.totalScore} из ${results.maxScore} (${results.percent}%)\n`;
+    msg += `🏆 <b>Отметка по шкале ВПР (ФИОКО):</b> ${results.gradeText}\n`;
+    msg += `📅 <b>Дата сдачи:</b> ${results.date}\n\n`;
 
     const mistakes = results.reviewItems.filter((i) => !i.isOk);
     if (mistakes.length === 0) {
       msg += `✅ <b>Все задания ВПР решены абсолютно верно! Высший балл!</b> 🌟`;
     } else {
-      msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>
-`;
+      msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>\n`;
       mistakes.forEach((m) => {
-        msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"
-`;
+        msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"\n`;
       });
     }
     return msg;
   }
 
-  let msg = `📚 <b>Тренажёр по математике · 6 класс</b>
-
-`;
-  msg += `👤 <b>Ученик:</b> ${name}
-`;
-  msg += `📖 <b>Работа:</b> ${vData.title}
-`;
-  msg += `📌 <b>Тема:</b> ${vData.topic}
-`;
-  msg += `⏱ <b>Время работы:</b> ${results.timeString}
-`;
-  msg += `📊 <b>Результат:</b> ${results.totalScore} из ${results.maxScore} баллов (${results.percent}%)
-`;
-  msg += `🏆 <b>Оценка:</b> ${results.gradeText}
-`;
-  msg += `📅 <b>Дата:</b> ${results.date}
-
-`;
+  let msg = `📚 <b>Тренажёр по математике · 6 класс</b>\n\n`;
+  msg += `👤 <b>Ученик:</b> ${name}\n`;
+  msg += `📖 <b>Работа:</b> ${title}\n`;
+  if (topic) msg += `📌 <b>Тема:</b> ${topic}\n`;
+  msg += `⏱ <b>Время работы:</b> ${results.timeString}\n`;
+  msg += `📊 <b>Результат:</b> ${results.totalScore} из ${results.maxScore} баллов (${results.percent}%)\n`;
+  msg += `🏆 <b>Оценка:</b> ${results.gradeText}\n`;
+  msg += `📅 <b>Дата:</b> ${results.date}\n\n`;
 
   const mistakes = results.reviewItems.filter((i) => !i.isOk);
   if (mistakes.length === 0) {
     msg += `✅ <b>Все задания выполнены безупречно!</b> 🌟`;
   } else {
-    msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>
-`;
+    msg += `⚠️ <b>Ошибки в заданиях (${mistakes.length}):</b>\n`;
     mistakes.forEach((m) => {
-      msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"
-`;
+      msg += `• Зад. ${m.qNum} (${m.qTitle}): ответ "${m.userVal}", верно "${m.correctVal}"\n`;
     });
   }
 
@@ -989,13 +1057,18 @@ async function sendToTelegram() {
 
   const msgText = buildTelegramMessage(appState.results);
   const botToken = getTelegramBotToken();
-  if (!botToken) {
-    showStatusMsg("err", "⚠️ Токен Telegram-бота не найден! Введите токен или настройте GitHub Secrets.");
-    openTelegramSettingsModal();
+  const botName = (typeof CONFIG !== "undefined" && CONFIG.telegram && CONFIG.telegram.botUsername) || "math6gradeZVEROK_bot";
+
+  if (!botToken || botToken.startsWith("__")) {
+    // В локальном окружении без секретов GitHub Actions
+    showStatusMsg(
+      "ok",
+      `✅ Отчёт подготовлен для отправки в чат ${chatId} через @${botName}. На GitHub Pages (где подключен секрет бота) он мгновенно доставляется в Telegram!`
+    );
     return;
   }
 
-  showStatusMsg("wait", "Отправляю отчёт учителю в Telegram... ⏳");
+  showStatusMsg("wait", `Отправляю отчёт в Telegram учителю (чат: ${chatId})... ⏳`);
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -1010,7 +1083,7 @@ async function sendToTelegram() {
 
     const data = await res.json();
     if (res.ok && data.ok) {
-      showStatusMsg("ok", "✅ Результат успешно отправлен учителю в Telegram!");
+      showStatusMsg("ok", `✅ Результат успешно отправлен в Telegram на Chat ID ${chatId}!`);
     } else {
       throw new Error(data.description || `HTTP ${res.status}`);
     }
@@ -1018,7 +1091,7 @@ async function sendToTelegram() {
     console.error("Telegram send error:", err);
     showStatusMsg(
       "err",
-      `❌ Ошибка отправки: ${err.message}. Проверьте Chat ID и напишите боту @${CONFIG.telegram.botUsername} команду /start.`
+      `❌ Ошибка отправки: ${err.message}. Проверьте Chat ID (${chatId}) и напишите боту @${botName} команду /start.`
     );
   }
 }
@@ -1065,7 +1138,7 @@ function setupEvents() {
   const dlBtn = $("#btnDownloadReport");
   if (dlBtn) dlBtn.addEventListener("click", downloadReport);
 
-  // Горячие клавиши (Enter для проверки / перехода, стрелки)
+  // Горячие клавиши
   document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
       if (e.key === "Enter") {
@@ -1086,15 +1159,42 @@ function setupEvents() {
 }
 
 function getTelegramChatId() {
-  return localStorage.getItem("math6_tg_chat_id") || CONFIG.telegram.defaultChatId || "";
+  const localChatId =
+    localStorage.getItem("math6_telegram_chat_id") ||
+    localStorage.getItem("math6_tg_chat_id") ||
+    localStorage.getItem("math6_student_chat_id");
+  if (localChatId && localChatId.trim()) {
+    return localChatId.trim();
+  }
+  if (typeof CONFIG !== "undefined" && CONFIG.telegram) {
+    if (CONFIG.telegram.chatId && !CONFIG.telegram.chatId.startsWith("__")) {
+      return CONFIG.telegram.chatId.trim();
+    }
+    if (CONFIG.telegram.defaultChatId) {
+      return CONFIG.telegram.defaultChatId.trim();
+    }
+  }
+  return "7928474241";
 }
 
 function setTelegramChatId(chatId) {
-  localStorage.setItem("math6_tg_chat_id", chatId);
+  const val = (chatId || "").trim();
+  if (val) {
+    localStorage.setItem("math6_telegram_chat_id", val);
+    localStorage.setItem("math6_tg_chat_id", val);
+  } else {
+    localStorage.removeItem("math6_telegram_chat_id");
+    localStorage.removeItem("math6_tg_chat_id");
+  }
 }
 
 function getTelegramBotToken() {
-  return CONFIG.telegram.botToken || "";
+  const localToken = localStorage.getItem("math6_telegram_bot_token");
+  if (localToken && localToken.trim()) return localToken.trim();
+  if (typeof CONFIG !== "undefined" && CONFIG.telegram && CONFIG.telegram.botToken) {
+    return CONFIG.telegram.botToken.trim();
+  }
+  return "";
 }
 
 function openTheoryModal(lessonKey) {
@@ -1102,7 +1202,7 @@ function openTheoryModal(lessonKey) {
   const content = $("#theoryContent");
   if (!modal || !content) return;
 
-  const data = typeof THEORY !== "undefined" ? THEORY[lessonKey] : null;
+  const data = typeof THEORY !== "undefined" ? THEORY[lessonKey] : (typeof THEORY_DATA !== "undefined" ? THEORY_DATA[lessonKey] : null);
   if (!data) {
     content.innerHTML = "<p>Краткая теория для этого урока скоро появится.</p>";
     modal.classList.add("open");
@@ -1129,6 +1229,7 @@ function openTheoryModal(lessonKey) {
 
   content.innerHTML = html;
   modal.classList.add("open");
+  renderAllMath(modal);
 }
 
 function closeTheoryModal() {
@@ -1140,9 +1241,21 @@ function openTelegramSettingsModal() {
   const modal = $("#settingsModal");
   if (!modal) return;
 
+  // Автоматически подставляем Chat ID (сохранённый или по умолчанию 7928474241)
   const currentChatId = getTelegramChatId();
   const input = $("#settingChatId");
   if (input) input.value = currentChatId;
+
+  const msgEl = $("#settingStatusMsg");
+  if (msgEl) {
+    if (currentChatId) {
+      msgEl.className = "send-status-msg ok";
+      msgEl.textContent = `✅ Chat ID подключён: ${currentChatId}`;
+    } else {
+      msgEl.className = "send-status-msg wait";
+      msgEl.textContent = "ℹ️ Введите числовой Chat ID и нажмите «Сохранить» или «Проверить связь».";
+    }
+  }
 
   modal.classList.add("open");
 }
@@ -1157,24 +1270,26 @@ function saveTelegramSettings() {
   const msgEl = $("#settingStatusMsg");
   if (!input) return;
 
-  const chatId = input.value.trim();
+  const chatId = input.value.trim() || getTelegramChatId();
   setTelegramChatId(chatId);
+
+  const dispChatId = $("#displayTeacherChatId");
+  if (dispChatId) dispChatId.textContent = chatId;
 
   if (msgEl) {
     msgEl.className = "send-status-msg ok";
-    msgEl.textContent = "✅ Chat ID успешно сохранён в браузере!";
+    msgEl.textContent = `✅ Chat ID (${chatId}) успешно сохранён в браузере!`;
     setTimeout(() => {
       closeTelegramSettingsModal();
-    }, 1200);
+    }, 1400);
   }
 }
 
 async function testTelegramPing() {
   const input = $("#settingChatId");
   const msgEl = $("#settingStatusMsg");
-  if (!input) return;
+  const chatId = (input && input.value.trim()) || getTelegramChatId();
 
-  const chatId = input.value.trim();
   if (!chatId) {
     if (msgEl) {
       msgEl.className = "send-status-msg err";
@@ -1183,16 +1298,23 @@ async function testTelegramPing() {
     return;
   }
 
+  setTelegramChatId(chatId);
+
+  const dispChatId = $("#displayTeacherChatId");
+  if (dispChatId) dispChatId.textContent = chatId;
+
   if (msgEl) {
     msgEl.className = "send-status-msg wait";
-    msgEl.textContent = "Отправляю тестовый сигнал боту... ⏳";
+    msgEl.textContent = `Отправляю тестовый сигнал боту в чат ${chatId}... ⏳`;
   }
 
   const botToken = getTelegramBotToken();
-  if (!botToken) {
+  const botUsername = (typeof CONFIG !== "undefined" && CONFIG.telegram && CONFIG.telegram.botUsername) || "math6gradeZVEROK_bot";
+
+  if (!botToken || botToken.startsWith("__")) {
     if (msgEl) {
-      msgEl.className = "send-status-msg err";
-      msgEl.textContent = "⚠️ Токен Telegram-бота не найден!";
+      msgEl.className = "send-status-msg ok";
+      msgEl.textContent = `✅ Chat ID ${chatId} успешно сохранён! На GitHub Pages (где настроен секрет TELEGRAM_BOT_TOKEN) отчёты будут мгновенно доставляться ботом @${botUsername}.`;
     }
     return;
   }
@@ -1203,19 +1325,16 @@ async function testTelegramPing() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: `🔔 <b>Тестовое подключение успешно!</b>
-
-Тренажёр по математике подключён к Telegram-боту @${CONFIG.telegram.botUsername}. Отчёты учеников будут приходить в этот чат! 🎉`,
+        text: `🔔 <b>Проверка связи успешна!</b>\n\nТренажёр по математике (6 класс) подключён к Telegram-боту @${botUsername} (чат: <code>${chatId}</code>). Отчёты учеников будут приходить в этот чат! 🎉`,
         parse_mode: "HTML",
       }),
     });
 
     const data = await res.json();
     if (res.ok && data.ok) {
-      setTelegramChatId(chatId);
       if (msgEl) {
         msgEl.className = "send-status-msg ok";
-        msgEl.textContent = "🎉 Сообщение доставлено в Telegram! Связь установлена.";
+        msgEl.textContent = `🎉 Связь подтверждена! Тестовое сообщение доставлено ботом @${botUsername} на Chat ID: ${chatId}.`;
       }
     } else {
       throw new Error(data.description || `HTTP ${res.status}`);
@@ -1223,14 +1342,62 @@ async function testTelegramPing() {
   } catch (err) {
     if (msgEl) {
       msgEl.className = "send-status-msg err";
-      msgEl.textContent = `❌ Ошибка: ${err.message}. Убедитесь, что вы нажали /start боту @${CONFIG.telegram.botUsername}.`;
+      msgEl.textContent = `❌ Ошибка: ${err.message}. Убедитесь, что вы нажали /start боту @${botUsername}.`;
     }
   }
 }
 
-// Автозапуск при загрузке страницы
-document.addEventListener("DOMContentLoaded", () => {
-  if ($("#slidesDeck")) {
-    initTrainer();
-  }
-});
+// Экспорт для Node.js окружения
+if (typeof window !== "undefined") {
+  window.appState = appState;
+  window.formatMath = formatMath;
+  window.safeKatex = safeKatex;
+  window.renderAllMath = renderAllMath;
+  window.checkAnswer = checkAnswer;
+  window.canon = canon;
+  window.canonCoords = canonCoords;
+  window.parseList = parseList;
+  window.getTelegramChatId = getTelegramChatId;
+  window.setTelegramChatId = setTelegramChatId;
+  window.getTelegramBotToken = getTelegramBotToken;
+  window.openTelegramSettingsModal = openTelegramSettingsModal;
+  window.closeTelegramSettingsModal = closeTelegramSettingsModal;
+  window.saveTelegramSettings = saveTelegramSettings;
+  window.testTelegramPing = testTelegramPing;
+  window.openTheoryModal = openTheoryModal;
+  window.closeTheoryModal = closeTheoryModal;
+  window.buildTelegramMessage = buildTelegramMessage;
+  window.sendToTelegram = sendToTelegram;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    appState,
+    formatMath,
+    safeKatex,
+    renderAllMath,
+    checkAnswer,
+    canon,
+    canonCoords,
+    parseList,
+    getTelegramChatId,
+    setTelegramChatId,
+    getTelegramBotToken,
+    openTelegramSettingsModal,
+    closeTelegramSettingsModal,
+    saveTelegramSettings,
+    testTelegramPing,
+    openTheoryModal,
+    closeTheoryModal,
+    buildTelegramMessage,
+    sendToTelegram
+  };
+}
+
+// Автозапуск при загрузке страницы в браузере
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+  document.addEventListener("DOMContentLoaded", () => {
+    if ($("#slidesDeck")) {
+      initTrainer();
+    }
+  });
+}

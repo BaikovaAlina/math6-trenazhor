@@ -17,6 +17,7 @@ const CONFIG = {
     // Плейсхолдеры для безопасного внедрения через GitHub Actions Secrets
     botToken: "__TELEGRAM_BOT_TOKEN__",
     chatId: "__TELEGRAM_CHAT_ID__",
+    defaultChatId: "7928474241",
     botUsername: "math6gradeZVEROK_bot",
   },
 
@@ -57,22 +58,28 @@ function getTelegramBotToken() {
 
 // Функция получения актуального chatId (из config или из localStorage)
 function getTelegramChatId() {
-  const localChatId = localStorage.getItem("math6_telegram_chat_id");
+  const localChatId =
+    localStorage.getItem("math6_telegram_chat_id") ||
+    localStorage.getItem("math6_tg_chat_id") ||
+    localStorage.getItem("math6_student_chat_id");
   if (localChatId && localChatId.trim()) {
     return localChatId.trim();
   }
   if (CONFIG.telegram.chatId && !CONFIG.telegram.chatId.startsWith("__")) {
     return CONFIG.telegram.chatId.trim();
   }
-  return "";
+  return CONFIG.telegram.defaultChatId || "7928474241";
 }
 
 // Функция сохранения chatId в localStorage
 function setTelegramChatId(chatId) {
-  if (chatId) {
-    localStorage.setItem("math6_telegram_chat_id", chatId.trim());
+  const val = (chatId || "").trim();
+  if (val) {
+    localStorage.setItem("math6_telegram_chat_id", val);
+    localStorage.setItem("math6_tg_chat_id", val);
   } else {
     localStorage.removeItem("math6_telegram_chat_id");
+    localStorage.removeItem("math6_tg_chat_id");
   }
 }
 
@@ -83,4 +90,15 @@ function setTelegramBotToken(token) {
   } else {
     localStorage.removeItem("math6_telegram_bot_token");
   }
+}
+
+if (typeof window !== "undefined") {
+  window.CONFIG = CONFIG;
+  window.getTelegramBotToken = getTelegramBotToken;
+  window.getTelegramChatId = getTelegramChatId;
+  window.setTelegramChatId = setTelegramChatId;
+  window.setTelegramBotToken = setTelegramBotToken;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { CONFIG, getTelegramBotToken, getTelegramChatId, setTelegramChatId, setTelegramBotToken };
 }

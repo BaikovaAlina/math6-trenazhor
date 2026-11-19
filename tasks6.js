@@ -1254,7 +1254,7 @@ TASKS_GRADE6_BANK.forEach(topic => {
     timeLimitMinutes: 30,
     questions: topic.tasks.map((task, idx) => ({
       num: String(idx + 1),
-      title: task.label.length > 50 ? task.label.substring(0, 48) + "..." : task.label,
+      title: task.label,
       crumb: `Тема ${topic.num} · Задание ${idx + 1}`,
       ref: task.source,
       level: task.level,
